@@ -49,10 +49,16 @@ export function ClientManagementModal() {
   if (!isClientModalOpen) return null;
 
   const canManage = Boolean(
-    currentUser?.canManageClients || currentUser?.canEdit
+    currentUser?.canManageClients ||
+      currentUser?.canEdit ||
+      currentUser?.canEditForecast ||
+      currentUser?.canEditOperations
   );
   const canRemove = Boolean(
-    currentUser?.canManageClients || currentUser?.canDelete
+    currentUser?.canManageClients ||
+      currentUser?.canDelete ||
+      currentUser?.canDeleteForecast ||
+      currentUser?.canDeleteOperations
   );
   const summary = calculateSummary(state);
 

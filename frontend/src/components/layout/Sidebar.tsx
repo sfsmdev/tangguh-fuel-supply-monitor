@@ -67,7 +67,11 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
   const summary = calculateSummary(state);
   const allowedViews = currentUser?.allowedViews || [];
   const canManageClients = Boolean(
-    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
+    currentUser?.canManageClients ||
+      currentUser?.roleCode === 'admin' ||
+      currentUser?.canEdit ||
+      currentUser?.canEditForecast ||
+      currentUser?.canEditOperations
   );
 
   return (

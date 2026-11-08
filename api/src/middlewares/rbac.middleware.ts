@@ -14,7 +14,11 @@ export class RbacMiddleware {
 
   static async requireAdmin(username?: string | null): Promise<UserAccount> {
     const user = await this.verifyUser(username);
-    if (!user.canManageClients || !user.canManageStorage) {
+    if (
+      user.roleCode !== 'admin' &&
+      !user.canManageClients &&
+      !user.canManageStorage
+    ) {
       throw new Error('Forbidden: Administrator privileges required.');
     }
     return user;
@@ -22,7 +26,13 @@ export class RbacMiddleware {
 
   static async requireEdit(username?: string | null): Promise<UserAccount> {
     const user = await this.verifyUser(username);
-    if (!user.canEdit) {
+    if (
+      !user.canEdit &&
+      !user.canEditForecast &&
+      !user.canEditOperations &&
+      !user.canManageClients &&
+      !user.canManageStorage
+    ) {
       throw new Error('Forbidden: Write/Edit permission required.');
     }
     return user;
@@ -30,7 +40,13 @@ export class RbacMiddleware {
 
   static async requireDelete(username?: string | null): Promise<UserAccount> {
     const user = await this.verifyUser(username);
-    if (!user.canDelete) {
+    if (
+      !user.canDelete &&
+      !user.canDeleteForecast &&
+      !user.canDeleteOperations &&
+      !user.canManageClients &&
+      !user.canManageStorage
+    ) {
       throw new Error('Forbidden: Delete permission required.');
     }
     return user;

@@ -67,7 +67,11 @@ export function OperationalModals() {
   } = store;
 
   const isAdmin = Boolean(
-    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
+    currentUser?.canManageClients ||
+      currentUser?.roleCode === 'admin' ||
+      currentUser?.canEditOperations ||
+      currentUser?.canEditForecast ||
+      currentUser?.canEdit
   );
   const canEditOperations = Boolean(
     currentUser?.canEditOperations || currentUser?.roleCode === 'admin'

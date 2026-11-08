@@ -199,7 +199,7 @@ ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
 -- 1. HAPUS SELURUH USER LAMA YANG SUDAH ADA DI SUPABASE
 -- Membersihkan akun lama (seperti staff/management versi lama) agar bersih total
 -- -----------------------------------------------------------------------------
-DELETE FROM public.app_users;
+DELETE FROM public.app_users WHERE true;
 
 -- -----------------------------------------------------------------------------
 -- 2. GANTI DENGAN DAFTAR USER, PASSWORD (BCRYPT), DAN KEWENANGAN BARU (9 Akun Resmi)
@@ -827,7 +827,10 @@ BEGIN
     'topups', v_topups,
     'forecastDispatches', v_forecast_dispatches,
     'forecastTopups', v_forecast_topups,
-    'shoreTankDailyRobs', '{}'::JSONB
+    'shoreTankDailyRobs', COALESCE(
+      (SELECT payload->'shoreTankDailyRobs' FROM public.operational_state WHERE id = 'current' LIMIT 1),
+      '{}'::JSONB
+    )
   );
 END;
 $$;
@@ -873,7 +876,7 @@ BEGIN
     updated_at = NOW();
 
   -- 2. Sync clients table
-  DELETE FROM public.clients;
+  DELETE FROM public.clients WHERE true;
   IF jsonb_typeof(p_state->'clients') = 'array' THEN
     INSERT INTO public.clients (id, name, color, badge_class, dot_class)
     SELECT
@@ -892,7 +895,7 @@ BEGIN
   END IF;
 
   -- 3. Sync bunkerings table
-  DELETE FROM public.bunkerings;
+  DELETE FROM public.bunkerings WHERE true;
   IF jsonb_typeof(p_state->'bunkerings') = 'array' THEN
     INSERT INTO public.bunkerings (
       id, date, contractor, vessel_name, volume, start_time, end_time, flow_rate
@@ -910,7 +913,7 @@ BEGIN
   END IF;
 
   -- 4. Sync soundings table
-  DELETE FROM public.soundings;
+  DELETE FROM public.soundings WHERE true;
   IF jsonb_typeof(p_state->'soundings') = 'array' THEN
     INSERT INTO public.soundings (
       id, date, time, liters, draft_fwd, draft_aft, remarks, doc_name, doc_data_url
@@ -929,7 +932,7 @@ BEGIN
   END IF;
 
   -- 5. Sync topups table
-  DELETE FROM public.topups;
+  DELETE FROM public.topups WHERE true;
   IF jsonb_typeof(p_state->'topups') = 'array' THEN
     INSERT INTO public.topups (
       id, vessel, volume, load_port, disch_port, etd, eta, atd, ata, status
@@ -949,7 +952,7 @@ BEGIN
   END IF;
 
   -- 6. Sync forecast_dispatches table
-  DELETE FROM public.forecast_dispatches;
+  DELETE FROM public.forecast_dispatches WHERE true;
   IF jsonb_typeof(p_state->'forecastDispatches') = 'array' THEN
     INSERT INTO public.forecast_dispatches (
       id, date, client, vessel, volume
@@ -964,7 +967,7 @@ BEGIN
   END IF;
 
   -- 7. Sync forecast_topups table
-  DELETE FROM public.forecast_topups;
+  DELETE FROM public.forecast_topups WHERE true;
   IF jsonb_typeof(p_state->'forecastTopups') = 'array' THEN
     INSERT INTO public.forecast_topups (
       id, date, vessel, floating_volume, shore_volume

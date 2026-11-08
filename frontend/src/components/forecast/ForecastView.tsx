@@ -54,7 +54,10 @@ export function ForecastView() {
       (currentUser?.roleCode === 'admin' || currentUser?.roleCode === 'planner' || currentUser?.canDelete)
   );
   const isAdmin = Boolean(
-    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
+    currentUser?.canManageClients ||
+      currentUser?.roleCode === 'admin' ||
+      currentUser?.canEditForecast ||
+      currentUser?.canEdit
   );
 
   const vesselName = state.storageConfig.vesselName || 'SPOB TRANS BILGIT';

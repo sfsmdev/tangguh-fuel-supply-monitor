@@ -126,8 +126,12 @@ export function TopHeader({ onToggleMobileMenu }: TopHeaderProps) {
             <span>{isSyncing ? 'Syncing...' : 'Live Sync'}</span>
           </button>
 
-          {/* Manage Clients Button (Admin Only) */}
-          {(currentUser?.canManageClients || currentUser?.roleCode === 'admin') && (
+          {/* Manage Clients Button */}
+          {(currentUser?.canManageClients ||
+            currentUser?.roleCode === 'admin' ||
+            currentUser?.canEdit ||
+            currentUser?.canEditForecast ||
+            currentUser?.canEditOperations) && (
             <button
               type="button"
               onClick={() => setClientModalOpen(true)}

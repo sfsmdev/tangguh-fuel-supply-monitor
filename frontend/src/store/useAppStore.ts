@@ -15,6 +15,7 @@ import {
   sanitizeOperationalState,
   SoundingRecord,
   StorageConfig,
+  SupabaseProvider,
   TopupRecord,
   TopupStatus,
   UserAccount,
@@ -23,6 +24,9 @@ import {
 
 const STORAGE_KEY = 'tangguh_fuel_state_v2_clean';
 const SESSION_KEY = 'tangguh_active_session_v2';
+
+let pendingSaveCount = 0;
+let lastLocalMutationAt = 0;
 
 function hasOperationalRecords(s: AppOperationalState | null): boolean {
   if (!s) return false;
@@ -354,30 +358,64 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   syncFromServer: async (silent = false) => {
     if (typeof window === 'undefined') return;
+
+    // Prevent background polling from overwriting an in-flight or very recent user mutation
+    if (
+      silent &&
+      (pendingSaveCount > 0 || Date.now() - lastLocalMutationAt < 8000)
+    ) {
+      return;
+    }
+
     if (!silent) {
       set({ isSyncing: true });
     }
     try {
-      const res = await fetch('/api/state', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.state) {
-          const remoteState = sanitizeOperationalState(data.state);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteState));
-          set({
-            state: remoteState,
-            lastSyncedAt: new Date().toISOString(),
-            isSyncing: false,
-          });
-          if (!silent) {
-            get().showToast(
-              'Synchronized latest operational data from server.',
-              'success'
-            );
+      let remoteState: AppOperationalState | null = null;
+
+      try {
+        const res = await fetch('/api/state', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.state) {
+            remoteState = sanitizeOperationalState(data.state);
           }
-          return;
+        }
+      } catch {
+        // Fallback to direct SupabaseProvider below
+      }
+
+      if (!remoteState) {
+        const directState = await SupabaseProvider.fetchState();
+        if (directState) {
+          remoteState = sanitizeOperationalState(directState);
         }
       }
+
+      // Re-check after async fetch to make sure user didn't mutate while fetch was in flight
+      if (
+        silent &&
+        (pendingSaveCount > 0 || Date.now() - lastLocalMutationAt < 8000)
+      ) {
+        return;
+      }
+
+      if (remoteState) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteState));
+        set({
+          state: remoteState,
+          lastSyncedAt: new Date().toISOString(),
+          isSyncing: false,
+        });
+        if (!silent) {
+          get().showToast(
+            'Synchronized latest operational data from server.',
+            'success'
+          );
+        }
+        return;
+      }
+
       if (!silent) {
         set({ isSyncing: false });
         get().showToast('Unable to reach server for live sync.', 'warning');
@@ -392,7 +430,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   persistState: (nextState: AppOperationalState) => {
     const clean = sanitizeOperationalState(nextState);
-    set({ state: clean });
+    lastLocalMutationAt = Date.now();
+    set({ state: clean, lastSyncedAt: new Date().toISOString() });
 
     if (typeof window !== 'undefined') {
       try {
@@ -401,17 +440,34 @@ export const useAppStore = create<AppStore>((set, get) => ({
         // ignore
       }
 
-      const username = get().currentUser?.username || 'admin';
-      fetch('/api/state', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-role': username,
-        },
-        body: JSON.stringify({ state: clean }),
-      }).catch(() => {
-        // non-blocking background API sync
-      });
+      const username = get().currentUser?.username || 'Admin';
+      pendingSaveCount += 1;
+
+      (async () => {
+        try {
+          let savedViaApi = false;
+          try {
+            const res = await fetch('/api/state', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-role': username,
+              },
+              body: JSON.stringify({ state: clean }),
+            });
+            savedViaApi = res.ok;
+          } catch {
+            savedViaApi = false;
+          }
+
+          if (!savedViaApi) {
+            await SupabaseProvider.upsertState(clean);
+          }
+        } finally {
+          pendingSaveCount = Math.max(0, pendingSaveCount - 1);
+          lastLocalMutationAt = Date.now();
+        }
+      })();
     }
   },
 
@@ -549,7 +605,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // --- CLIENT MASTER DATA CRUD (UNLIMITED CLIENTS) ---
   addClient: (name: string, colorHex?: string) => {
     const user = get().currentUser;
-    if (!user || (!user.canManageClients && !user.canEdit)) {
+    if (
+      !user ||
+      (!user.canManageClients &&
+        !user.canEdit &&
+        !user.canEditForecast &&
+        !user.canEditOperations)
+    ) {
       get().showToast(
         'Edit or Administrator privileges are required to add clients.',
         'error'
@@ -586,7 +648,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   updateClient: (id: string, name: string, colorHex?: string) => {
     const user = get().currentUser;
-    if (!user || (!user.canManageClients && !user.canEdit)) {
+    if (
+      !user ||
+      (!user.canManageClients &&
+        !user.canEdit &&
+        !user.canEditForecast &&
+        !user.canEditOperations)
+    ) {
       get().showToast(
         'Edit or Administrator privileges are required to edit clients.',
         'error'
@@ -615,9 +683,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   deleteClient: (id: string) => {
     const user = get().currentUser;
-    if (!user || (!user.canManageClients && !user.canDelete)) {
+    if (
+      !user ||
+      (!user.canManageClients &&
+        !user.canDelete &&
+        !user.canDeleteForecast &&
+        !user.canDeleteOperations)
+    ) {
       get().showToast(
-        'Administrator privileges are required to delete clients.',
+        'Delete or Administrator privileges are required to delete clients.',
         'error'
       );
       return;
@@ -920,7 +994,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updateStorageConfig: (updates) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (
+      !user ||
+      (!user.canManageStorage &&
+        !user.canEdit &&
+        !user.canEditForecast &&
+        !user.canEditOperations)
+    ) {
+      return;
+    }
     const nextState = InventoryService.updateStorageConfig(
       get().state,
       updates
