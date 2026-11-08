@@ -5,7 +5,11 @@
 -- =============================================================================
 
 -- 1. Enable pgcrypto extension for UUID generation and bcrypt password hashing
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+-- Ensure session search path includes both public and extensions schemas
+SET search_path TO public, extensions;
 
 -- =============================================================================
 -- 2. RBAC AUTHORITY SCHEMA: public.rbac_roles (Perbedaan Wewenang Role)
@@ -593,7 +597,7 @@ CREATE OR REPLACE FUNCTION public.authenticate_app_user(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_result JSONB;
@@ -637,7 +641,7 @@ CREATE OR REPLACE FUNCTION public.get_app_user_profile(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_result JSONB;
@@ -674,7 +678,7 @@ CREATE OR REPLACE FUNCTION public.get_full_operational_state()
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_storage_config JSONB;
@@ -835,7 +839,7 @@ CREATE OR REPLACE FUNCTION public.sync_full_operational_state(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 BEGIN
   -- 1. Update storage_configs
