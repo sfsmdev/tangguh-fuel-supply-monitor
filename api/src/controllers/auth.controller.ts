@@ -11,7 +11,7 @@ export class AuthController {
       return {
         success: false,
         error:
-          'Invalid username or password, or user schema has not been initialized in Supabase yet.',
+          'Invalid username or password. Please verify your credentials.',
       };
     }
     return {
@@ -28,7 +28,7 @@ export class AuthController {
     }
     const user = await AuthService.getUserByUsername(username);
     if (!user) {
-      return { success: false, error: 'User profile not found in Supabase.' };
+      return { success: false, error: 'User profile not found.' };
     }
     return { success: true, user };
   }

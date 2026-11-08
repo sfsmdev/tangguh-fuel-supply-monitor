@@ -440,7 +440,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     if (!user) {
       get().showToast(
-        'Invalid credentials or user not found in Supabase.',
+        'Invalid credentials or user not found.',
         'error'
       );
       return false;

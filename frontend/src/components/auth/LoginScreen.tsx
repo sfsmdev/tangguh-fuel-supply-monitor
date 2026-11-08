@@ -44,7 +44,7 @@ export function LoginScreen() {
       const ok = await login(username, password);
       if (!ok) {
         setErrorMsg(
-          'Invalid credentials. Please verify your username/password in Supabase.'
+          'Invalid credentials. Please verify your username and password.'
         );
       }
     } finally {
@@ -189,7 +189,7 @@ export function LoginScreen() {
               <LogIn className="w-4 h-4" />
               <span>
                 {isSubmitting
-                  ? 'Verifying with Supabase...'
+                  ? 'Verifying Credentials...'
                   : 'Sign In to Operational Portal'}
               </span>
             </button>
