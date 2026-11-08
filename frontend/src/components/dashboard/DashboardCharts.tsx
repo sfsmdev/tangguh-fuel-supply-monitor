@@ -36,7 +36,9 @@ ChartJS.register(
 export function ContractorDistributionCard() {
   const { state, currentUser, setClientModalOpen } = useAppStore();
   const summary = calculateSummary(state);
-  const isAdmin = Boolean(currentUser?.canManageClients);
+  const canManageClients = Boolean(
+    currentUser?.canManageClients || currentUser?.canEdit
+  );
 
   const clientValues = state.clients.map(
     (c) => summary.clientTotals[c.name] || 0
@@ -68,7 +70,7 @@ export function ContractorDistributionCard() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {state.clients.length} Contractors
             </span>
-            {isAdmin && (
+            {canManageClients && (
               <button
                 type="button"
                 onClick={() => setClientModalOpen(true)}
@@ -107,7 +109,7 @@ export function ContractorDistributionCard() {
                     No clients available. Click &apos;Add Client&apos; to create
                     one.
                   </span>
-                  {isAdmin && (
+                  {canManageClients && (
                     <button
                       type="button"
                       onClick={() => setClientModalOpen(true)}
@@ -128,8 +130,8 @@ export function ContractorDistributionCard() {
         </div>
       </div>
 
-      {/* Dynamic Legend Table */}
-      <div className="space-y-2 mt-4 pt-3 border-t border-slate-100">
+      {/* Dynamic Legend Table (Scrollable for Unlimited Clients) */}
+      <div className="space-y-2 mt-4 pt-3 border-t border-slate-100 max-h-52 overflow-y-auto pr-1">
         {state.clients.map((client) => {
           const vol = summary.clientTotals[client.name] || 0;
           const pct =
@@ -143,7 +145,8 @@ export function ContractorDistributionCard() {
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${client.dotClass}`}
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: client.color }}
                 />
                 <span className="font-bold text-slate-700 truncate">
                   {client.name}
@@ -213,13 +216,16 @@ export function DispatchTrendlineCard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap text-xs">
+        <div className="flex items-center gap-3 flex-wrap text-xs max-h-20 overflow-y-auto">
           {state.clients.map((c) => (
             <span
               key={c.id}
               className="inline-flex items-center gap-1.5 font-semibold text-slate-600"
             >
-              <span className={`w-2.5 h-2.5 rounded-xs ${c.dotClass}`} />
+              <span
+                className="w-2.5 h-2.5 rounded-xs shrink-0"
+                style={{ backgroundColor: c.color }}
+              />
               <span>{c.name}</span>
             </span>
           ))}

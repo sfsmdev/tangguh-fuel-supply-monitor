@@ -21,6 +21,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [clockText, setClockText] = useState('--:--:-- WIT');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const updateClock = () => {
@@ -32,14 +33,19 @@ export function LoginScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    const ok = login(username, password);
-    if (!ok) {
-      setErrorMsg(
-        'Invalid credentials. Please re-check email/username and password.'
-      );
+    setIsSubmitting(true);
+    try {
+      const ok = await login(username, password);
+      if (!ok) {
+        setErrorMsg(
+          'Invalid credentials. Please verify your username/password in Supabase.'
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -161,10 +167,15 @@ export function LoginScreen() {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-xl bg-[#0B557C] hover:bg-sky-900 active:scale-[0.99] text-white font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2"
+              disabled={isSubmitting}
+              className="w-full py-3 px-4 rounded-xl bg-[#0B557C] hover:bg-sky-900 active:scale-[0.99] disabled:opacity-60 text-white font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2"
             >
               <LogIn className="w-4 h-4" />
-              <span>Sign In to Operational Portal</span>
+              <span>
+                {isSubmitting
+                  ? 'Verifying with Supabase...'
+                  : 'Sign In to Operational Portal'}
+              </span>
             </button>
           </form>
 

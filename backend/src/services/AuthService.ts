@@ -1,32 +1,33 @@
-import { RBAC_USERS, UserAccount } from '../models/User';
+import { UserAccount } from '../models/User';
+import { SupabaseProvider } from '../db/SupabaseProvider';
 
+/**
+ * Authentication Service backed directly by Supabase (`public.app_users` & `public.rbac_roles`).
+ * No usernames or passwords are hardcoded in application source code.
+ */
 export class AuthService {
-  static authenticate(
+  static async authenticate(
     usernameInput: string,
     passwordInput: string
-  ): UserAccount | null {
-    const cleanUsername = (usernameInput || '').trim().toLowerCase();
+  ): Promise<UserAccount | null> {
+    const cleanUsername = (usernameInput || '').trim();
     const cleanPassword = (passwordInput || '').trim();
 
-    const matchedUser = RBAC_USERS[cleanUsername];
-    if (
-      !matchedUser ||
-      (matchedUser.password !== cleanPassword &&
-        matchedUser.password?.toLowerCase() !== cleanPassword.toLowerCase())
-    ) {
+    if (!cleanUsername || !cleanPassword) {
       return null;
     }
 
-    const { password: _, ...safeUser } = matchedUser;
-    return safeUser;
+    return SupabaseProvider.authenticateUser(cleanUsername, cleanPassword);
   }
 
-  static getUserByUsername(usernameInput: string): UserAccount | null {
-    const cleanUsername = (usernameInput || '').trim().toLowerCase();
-    const matchedUser = RBAC_USERS[cleanUsername];
-    if (!matchedUser) return null;
-    const { password: _, ...safeUser } = matchedUser;
-    return safeUser;
+  static async getUserByUsername(
+    usernameInput: string
+  ): Promise<UserAccount | null> {
+    const cleanUsername = (usernameInput || '').trim();
+    if (!cleanUsername) {
+      return null;
+    }
+
+    return SupabaseProvider.getUserProfile(cleanUsername);
   }
 }
-

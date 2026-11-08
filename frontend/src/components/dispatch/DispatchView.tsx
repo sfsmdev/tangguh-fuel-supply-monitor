@@ -29,7 +29,9 @@ export function DispatchView() {
 
   const canEdit = Boolean(currentUser?.canEdit);
   const canDelete = Boolean(currentUser?.canDelete);
-  const isAdmin = Boolean(currentUser?.canManageClients);
+  const isAdmin = Boolean(
+    currentUser?.canManageClients || currentUser?.canEdit
+  );
 
   const filteredDispatches = [...state.bunkerings]
     .filter((b) => {

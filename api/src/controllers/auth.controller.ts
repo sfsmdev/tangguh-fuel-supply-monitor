@@ -6,11 +6,12 @@ export class AuthController {
     password?: string;
   }): Promise<{ success: boolean; user?: UserAccount; error?: string }> {
     const { username = '', password = '' } = body || {};
-    const user = AuthService.authenticate(username, password);
+    const user = await AuthService.authenticate(username, password);
     if (!user) {
       return {
         success: false,
-        error: 'Invalid username or password. Please verify your credentials.',
+        error:
+          'Invalid username or password, or user schema has not been initialized in Supabase yet.',
       };
     }
     return {
@@ -18,5 +19,17 @@ export class AuthController {
       user,
     };
   }
-}
 
+  static async getProfile(
+    username?: string | null
+  ): Promise<{ success: boolean; user?: UserAccount; error?: string }> {
+    if (!username) {
+      return { success: false, error: 'Username is required.' };
+    }
+    const user = await AuthService.getUserByUsername(username);
+    if (!user) {
+      return { success: false, error: 'User profile not found in Supabase.' };
+    }
+    return { success: true, user };
+  }
+}

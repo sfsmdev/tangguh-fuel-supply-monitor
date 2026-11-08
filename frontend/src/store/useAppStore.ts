@@ -96,7 +96,7 @@ interface AppStore {
   persistState: (nextState: AppOperationalState) => void;
 
   // Auth Actions
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 
   // View & UI Actions
@@ -236,13 +236,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
   hydrate: async () => {
     if (typeof window === 'undefined') return;
 
-    // 1. Restore session
+    // 1. Restore session from sessionStorage & verify against Supabase
     try {
       const savedSession = sessionStorage.getItem(SESSION_KEY);
       if (savedSession) {
-        const user = AuthService.getUserByUsername(savedSession);
-        if (user) {
-          set({ currentUser: user });
+        try {
+          const parsedUser = JSON.parse(savedSession) as UserAccount;
+          if (parsedUser && parsedUser.username) {
+            set({ currentUser: parsedUser });
+            const refreshed = await AuthService.getUserByUsername(
+              parsedUser.username
+            );
+            if (refreshed) {
+              sessionStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
+              set({ currentUser: refreshed });
+            }
+          }
+        } catch {
+          // If legacy string username was stored, look it up from Supabase
+          const user = await AuthService.getUserByUsername(savedSession);
+          if (user) {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+            set({ currentUser: user });
+          } else {
+            sessionStorage.removeItem(SESSION_KEY);
+          }
         }
       }
     } catch {
@@ -319,23 +337,39 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
-  login: (username: string, password: string) => {
-    const user = AuthService.authenticate(username, password);
+  login: async (username: string, password: string) => {
+    let user: UserAccount | null = null;
+
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && data?.user) {
+          user = data.user as UserAccount;
+        }
+      }
+    } catch {
+      // Fallback to direct SupabaseProvider call from client if API route is unreachable
+    }
+
+    if (!user) {
+      user = await AuthService.authenticate(username, password);
+    }
+
     if (!user) {
       get().showToast(
-        'Invalid username or password. Please verify your credentials.',
+        'Invalid credentials or user not found in Supabase.',
         'error'
       );
       return false;
     }
 
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem(SESSION_KEY, user.username);
-      fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      }).catch(() => {});
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
     }
 
     const currentView = get().activeView;
@@ -434,25 +468,37 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
   },
 
-  // --- ADMIN CLIENT CRUD ---
+  // --- CLIENT MASTER DATA CRUD (UNLIMITED CLIENTS) ---
   addClient: (name: string, colorHex?: string) => {
     const user = get().currentUser;
-    if (!user || !user.canManageClients) {
+    if (!user || (!user.canManageClients && !user.canEdit)) {
       get().showToast(
-        'Administrator privileges are required to add clients.',
+        'Edit or Administrator privileges are required to add clients.',
         'error'
       );
       return null;
     }
 
     try {
-      const { state: nextState, client } = ClientService.addClient(
-        get().state,
-        name,
-        colorHex
-      );
+      const {
+        state: nextState,
+        client,
+        addedClients,
+      } = ClientService.addClient(get().state, name, colorHex);
       get().persistState(nextState);
-      get().showToast(`Client "${client.name}" added successfully.`, 'success');
+      if (addedClients.length > 1) {
+        get().showToast(
+          `Added ${addedClients.length} clients (${addedClients
+            .map((c) => c.name)
+            .join(', ')}).`,
+          'success'
+        );
+      } else {
+        get().showToast(
+          `Client "${client.name}" added successfully.`,
+          'success'
+        );
+      }
       return client;
     } catch (err: any) {
       get().showToast(err?.message || 'Failed to add client.', 'error');
@@ -462,9 +508,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   updateClient: (id: string, name: string, colorHex?: string) => {
     const user = get().currentUser;
-    if (!user || !user.canManageClients) {
+    if (!user || (!user.canManageClients && !user.canEdit)) {
       get().showToast(
-        'Administrator privileges are required to edit clients.',
+        'Edit or Administrator privileges are required to edit clients.',
         'error'
       );
       return null;
@@ -491,7 +537,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   deleteClient: (id: string) => {
     const user = get().currentUser;
-    if (!user || !user.canManageClients) {
+    if (!user || (!user.canManageClients && !user.canDelete)) {
       get().showToast(
         'Administrator privileges are required to delete clients.',
         'error'
@@ -520,7 +566,24 @@ export const useAppStore = create<AppStore>((set, get) => ({
       get().showToast('Permission denied: Read-only access.', 'error');
       return;
     }
-    const nextState = InventoryService.saveBunkering(get().state, payload);
+    let workingState = get().state;
+    // Automatically register client if a new contractor name was provided
+    if (
+      payload.contractor &&
+      !workingState.clients.some(
+        (c) => c.name.toLowerCase() === payload.contractor.trim().toLowerCase()
+      )
+    ) {
+      try {
+        workingState = ClientService.addClient(
+          workingState,
+          payload.contractor.trim()
+        ).state;
+      } catch {
+        // ignore if already exists
+      }
+    }
+    const nextState = InventoryService.saveBunkering(workingState, payload);
     get().persistState(nextState);
     get().showToast(
       payload.id
@@ -542,13 +605,37 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   bulkImportBunkerings: (items) => {
     if (!get().currentUser?.canEdit) return;
+    let workingState = get().state;
+
+    // Auto-register any new client names found in the imported Excel rows (unlimited clients)
+    const importedClientNames = Array.from(
+      new Set(
+        items
+          .map((item) => (item.contractor || '').trim())
+          .filter((name) => name && name !== 'UNASSIGNED')
+      )
+    );
+    for (const cName of importedClientNames) {
+      if (
+        !workingState.clients.some(
+          (c) => c.name.toLowerCase() === cName.toLowerCase()
+        )
+      ) {
+        try {
+          workingState = ClientService.addClient(workingState, cName).state;
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     const newRecords: BunkeringRecord[] = items.map((item, idx) => ({
       ...item,
       id: `bnk_imp_${Date.now()}_${idx}`,
     }));
     const nextState: AppOperationalState = {
-      ...get().state,
-      bunkerings: [...newRecords, ...get().state.bunkerings],
+      ...workingState,
+      bunkerings: [...newRecords, ...workingState.bunkerings],
     };
     get().persistState(nextState);
     get().showToast(
@@ -610,8 +697,24 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   saveForecastDispatch: (payload) => {
     if (!get().currentUser?.canEdit) return;
+    let workingState = get().state;
+    if (
+      payload.client &&
+      !workingState.clients.some(
+        (c) => c.name.toLowerCase() === payload.client.trim().toLowerCase()
+      )
+    ) {
+      try {
+        workingState = ClientService.addClient(
+          workingState,
+          payload.client.trim()
+        ).state;
+      } catch {
+        // ignore
+      }
+    }
     const nextState = InventoryService.saveForecastDispatch(
-      get().state,
+      workingState,
       payload
     );
     get().persistState(nextState);

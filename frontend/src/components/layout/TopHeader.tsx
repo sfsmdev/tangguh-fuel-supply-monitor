@@ -104,13 +104,13 @@ export function TopHeader({ onToggleMobileMenu }: TopHeaderProps) {
             <span>Live Sync</span>
           </div>
 
-          {/* Admin Manage Clients Button */}
-          {currentUser?.canManageClients && (
+          {/* Manage Clients Button (Admin & Operational Staff) */}
+          {(currentUser?.canManageClients || currentUser?.canEdit) && (
             <button
               type="button"
               onClick={() => setClientModalOpen(true)}
               className="bg-sky-700 hover:bg-sky-800 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition shadow-xs"
-              title="Manage Client Master List"
+              title="Manage Unlimited Client Master List"
             >
               <i className="fa-solid fa-users-gear" />
               <span className="hidden md:inline">Manage Clients</span>

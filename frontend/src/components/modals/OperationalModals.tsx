@@ -10,7 +10,6 @@ import {
   getWITIsoDate,
   getWITIsoDateTime,
   getWITIsoTime,
-  RBAC_USERS,
   TopupStatus,
 } from '@backend/index';
 import {
@@ -61,7 +60,9 @@ export function OperationalModals() {
     removeToast,
   } = store;
 
-  const isAdmin = Boolean(currentUser?.canManageClients);
+  const isAdmin = Boolean(
+    currentUser?.canManageClients || currentUser?.canEdit
+  );
   const canDelete = Boolean(currentUser?.canDelete);
 
   // --- 1. SWITCH USER STATE ---
@@ -343,9 +344,9 @@ export function OperationalModals() {
               </button>
             </div>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                if (store.login(loginUser, loginPass)) {
+                if (await store.login(loginUser, loginPass)) {
                   setLoginUser('');
                   setLoginPass('');
                 }

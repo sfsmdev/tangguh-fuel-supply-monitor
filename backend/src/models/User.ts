@@ -6,11 +6,15 @@ export type ViewId =
   | 'topupView'
   | 'settingsView';
 
-export interface UserAccount {
-  username: string;
-  password?: string;
-  displayName: string;
-  roleLabel: string;
+export type RoleCode = 'admin' | 'management' | 'staff' | 'contractor';
+
+/**
+ * RBAC Authority Schema stored in Supabase `public.rbac_roles`.
+ */
+export interface RbacRoleSchema {
+  roleCode: RoleCode;
+  roleName: string;
+  description: string;
   canEdit: boolean;
   canDelete: boolean;
   canManageStorage: boolean;
@@ -18,113 +22,21 @@ export interface UserAccount {
   allowedViews: ViewId[];
 }
 
-export const RBAC_USERS: Record<string, UserAccount> = {
-  admin: {
-    username: 'admin',
-    password: 'admin123',
-    displayName: 'Administrator',
-    roleLabel: 'Full Administrator',
-    canEdit: true,
-    canDelete: true,
-    canManageStorage: true,
-    canManageClients: true,
-    allowedViews: [
-      'dashboardView',
-      'forecastView',
-      'dispatchView',
-      'soundingView',
-      'topupView',
-      'settingsView',
-    ],
-  },
-  management: {
-    username: 'management',
-    password: 'manage2026',
-    displayName: 'Management',
-    roleLabel: 'Executive Management (View-Only)',
-    canEdit: false,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: [
-      'dashboardView',
-      'forecastView',
-      'dispatchView',
-      'soundingView',
-      'topupView',
-    ],
-  },
-  staff: {
-    username: 'staff',
-    password: 'staff2026',
-    displayName: 'Operations Staff',
-    roleLabel: 'Operational Staff (No Delete)',
-    canEdit: true,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: [
-      'dashboardView',
-      'forecastView',
-      'dispatchView',
-      'soundingView',
-      'topupView',
-    ],
-  },
-  jgc: {
-    username: 'jgc',
-    password: 'jgc2026',
-    displayName: 'JGC Representative',
-    roleLabel: 'Contractor: JGC (View-Only)',
-    canEdit: false,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView'],
-  },
-  saipem: {
-    username: 'saipem',
-    password: 'sai2026',
-    displayName: 'SAIPEM Representative',
-    roleLabel: 'Contractor: SAIPEM (View-Only)',
-    canEdit: false,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView'],
-  },
-  ptp: {
-    username: 'ptp',
-    password: 'ptp2026',
-    displayName: 'PETROSEA Representative',
-    roleLabel: 'Contractor: PETROSEA (View-Only)',
-    canEdit: false,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView'],
-  },
-  bptangguh: {
-    username: 'bptangguh',
-    password: 'bp2026',
-    displayName: 'BP Tangguh Oversight',
-    roleLabel: 'BP Tangguh Client (View-Only)',
-    canEdit: false,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView'],
-  },
-  user: {
-    username: 'user',
-    password: 'USER123',
-    displayName: 'Contractor User',
-    roleLabel: 'View-Only (Contractor)',
-    canEdit: false,
-    canDelete: false,
-    canManageStorage: false,
-    canManageClients: false,
-    allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView'],
-  },
-};
-
+/**
+ * Authenticated User Account profile returned by Supabase `public.app_users`
+ * joined with `public.rbac_roles`.
+ * Note: Usernames and passwords are NOT hardcoded in the application source;
+ * they are stored and verified directly in Supabase (`public.app_users`).
+ */
+export interface UserAccount {
+  username: string;
+  entityName?: string;
+  displayName: string;
+  roleLabel: string;
+  roleCode?: RoleCode;
+  canEdit: boolean;
+  canDelete: boolean;
+  canManageStorage: boolean;
+  canManageClients: boolean;
+  allowedViews: ViewId[];
+}

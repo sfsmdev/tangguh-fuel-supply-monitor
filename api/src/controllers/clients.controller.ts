@@ -16,7 +16,7 @@ export class ClientsController {
     username: string | null | undefined,
     payload: { name: string; color?: string }
   ): Promise<{ state: AppOperationalState; client: ClientRecord }> {
-    RbacMiddleware.requireAdmin(username);
+    await RbacMiddleware.requireEdit(username);
     const currentState = await DatabaseAdapter.getState();
     const { state: nextState, client } = ClientService.addClient(
       currentState,
@@ -31,7 +31,7 @@ export class ClientsController {
     username: string | null | undefined,
     payload: { id: string; name: string; color?: string }
   ): Promise<{ state: AppOperationalState; client: ClientRecord }> {
-    RbacMiddleware.requireAdmin(username);
+    await RbacMiddleware.requireEdit(username);
     const currentState = await DatabaseAdapter.getState();
     const { state: nextState, client } = ClientService.updateClient(
       currentState,
@@ -47,7 +47,7 @@ export class ClientsController {
     username: string | null | undefined,
     clientId: string
   ): Promise<{ state: AppOperationalState; deletedClient: ClientRecord }> {
-    RbacMiddleware.requireAdmin(username);
+    await RbacMiddleware.requireAdmin(username);
     const currentState = await DatabaseAdapter.getState();
     const { state: nextState, deletedClient } = ClientService.deleteClient(
       currentState,
@@ -57,4 +57,3 @@ export class ClientsController {
     return { state: nextState, deletedClient };
   }
 }
-

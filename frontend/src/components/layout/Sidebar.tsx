@@ -66,7 +66,9 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 
   const summary = calculateSummary(state);
   const allowedViews = currentUser?.allowedViews || [];
-  const isAdmin = Boolean(currentUser?.canManageClients);
+  const canManageClients = Boolean(
+    currentUser?.canManageClients || currentUser?.canEdit
+  );
 
   return (
     <>
@@ -167,19 +169,19 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
             )}
           </nav>
 
-          {/* Dynamic Clients / Exclusive Contractors Summary Badges */}
+          {/* Dynamic Clients / Exclusive Contractors Summary Badges (Unlimited) */}
           <div className="mt-6 pt-4 border-t border-slate-200">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Exclusive Contractors
+                Exclusive Contractors ({state.clients.length})
               </p>
-              {isAdmin && (
+              {canManageClients && (
                 <button
                   type="button"
                   onClick={() => setClientModalOpen(true)}
                   className="text-[10px] font-bold text-sky-700 hover:text-sky-900 underline"
                 >
-                  Manage
+                  + Add / Manage
                 </button>
               )}
             </div>
@@ -190,7 +192,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
                   No clients available. Click &apos;Add Client&apos; to create
                   one.
                 </p>
-                {isAdmin && (
+                {canManageClients && (
                   <button
                     type="button"
                     onClick={() => setClientModalOpen(true)}
@@ -201,7 +203,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
                 )}
               </div>
             ) : (
-              <div className="flex flex-col space-y-1.5 text-xs font-semibold">
+              <div className="flex flex-col space-y-1.5 text-xs font-semibold max-h-56 overflow-y-auto pr-0.5">
                 {state.clients.map((client) => {
                   const totalVol = summary.clientTotals[client.name] || 0;
                   return (
@@ -211,7 +213,8 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
                     >
                       <span className="flex items-center gap-2 truncate">
                         <span
-                          className={`w-2 h-2 rounded-full shrink-0 ${client.dotClass}`}
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: client.color }}
                         />
                         <span className="truncate">{client.name}</span>
                       </span>

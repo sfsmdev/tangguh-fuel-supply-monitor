@@ -291,8 +291,8 @@
           <span>Live Sync</span>
         </div>
 
-        <!-- Admin Manage Clients Button -->
-        <button id="headerManageClientsBtn" class="bg-sky-700 hover:bg-sky-800 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition shadow-xs rbac-requires-admin" title="Manage Client Master List">
+        <!-- Manage Clients Button (Unlimited Clients) -->
+        <button id="headerManageClientsBtn" class="openManageClientsModalTrigger bg-sky-700 hover:bg-sky-800 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition shadow-xs rbac-requires-edit" title="Manage Unlimited Client Master List">
           <i class="fa-solid fa-users-gear"></i>
           <span class="hidden md:inline">Manage Clients</span>
         </button>
@@ -393,13 +393,13 @@
           </button>
         </nav>
 
-        <!-- Dynamic Clients Summary Badges -->
+        <!-- Dynamic Clients Summary Badges (Unlimited) -->
         <div class="mt-6 pt-4 border-t border-slate-200">
           <div class="flex items-center justify-between mb-2">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registered Clients</p>
-            <button type="button" class="openManageClientsModalTrigger text-[10px] font-bold text-sky-700 hover:text-sky-900 underline rbac-requires-admin">Manage</button>
+            <button type="button" class="openManageClientsModalTrigger text-[10px] font-bold text-sky-700 hover:text-sky-900 underline rbac-requires-edit">+ Add / Manage</button>
           </div>
-          <div id="sidebarClientsContainer" class="flex flex-col space-y-1.5 text-xs font-semibold">
+          <div id="sidebarClientsContainer" class="flex flex-col space-y-1.5 text-xs font-semibold max-h-56 overflow-y-auto pr-0.5">
             <!-- Dynamically populated from appState.clients -->
           </div>
         </div>
@@ -623,7 +623,7 @@
                   <i class="fa-solid fa-chart-pie text-sky-500"></i>
                   Cumulative Client Share
                 </h2>
-                <button type="button" class="openManageClientsModalTrigger text-[11px] font-bold text-sky-700 hover:text-sky-900 rbac-requires-admin">
+                <button type="button" class="openManageClientsModalTrigger text-[11px] font-bold text-sky-700 hover:text-sky-900 rbac-requires-edit">
                   <i class="fa-solid fa-users-gear mr-1"></i>Manage Clients
                 </button>
               </div>
@@ -686,7 +686,7 @@
             <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Dual-storage forecast simulations (<span class="font-bold text-sky-700" id="forecastFloatingTitleBadge">SPOB TRANS BILGIT</span> & <span class="font-bold text-emerald-700">SHORE TANK COMBO</span>) across 10 DLAH, 14 DLAH, and 30 DLAH horizons.</p>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
-            <button type="button" class="openManageClientsModalTrigger inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-semibold shadow-xs transition rbac-requires-admin">
+            <button type="button" class="openManageClientsModalTrigger inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-semibold shadow-xs transition rbac-requires-edit">
               <i class="fa-solid fa-users-gear"></i>
               <span>Manage Clients</span>
             </button>
@@ -1358,11 +1358,11 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-xs font-semibold text-slate-700">Client</label>
-              <button type="button" class="openManageClientsModalTrigger text-[10px] font-bold text-sky-700 hover:underline rbac-requires-admin">+ Manage Clients</button>
+              <button type="button" class="openManageClientsModalTrigger text-[10px] font-bold text-sky-700 hover:underline rbac-requires-edit">+ Manage Clients</button>
             </div>
             <select id="dispatchContractor" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500 font-medium"></select>
             <div id="dispatchClientEmptyHint" class="hidden mt-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
-              No clients available. Click &apos;Add Client&apos; to create one.
+              No clients available. Click &apos;+ Manage Clients&apos; to add unlimited clients.
             </div>
           </div>
         </div>
@@ -1417,7 +1417,7 @@
         <div class="bg-slate-100 p-2.5 rounded-lg font-mono text-[11px] text-slate-700">
           Date | Vessel | Contractor | Volume | Start | End
         </div>
-        <p class="text-[11px] text-slate-400">Accepted contractors: JGC, SAIPEM, PETROSEA. Time format: HH:mm.</p>
+        <p class="text-[11px] text-slate-400">Any client/contractor name is supported (unlimited clients; new clients are auto-registered).</p>
 
         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-sky-500 cursor-pointer bg-slate-50" id="dropZoneExcel">
           <i class="fa-solid fa-file-excel text-3xl text-emerald-600 mb-2"></i>
@@ -1606,12 +1606,13 @@
   <div id="forecastDispatchModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
       <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-        <h3 class="text-sm font-bold text-slate-900">Add Distribution Plan (<span id="modalDispatchStorageName">SPOB TRANS BILGIT</span>)</h3>
+        <h3 class="text-sm font-bold text-slate-900" id="forecastDispatchModalTitle">Add Distribution Plan (<span id="modalDispatchStorageName">SPOB TRANS BILGIT</span>)</h3>
         <button class="closeModalBtn text-slate-400 hover:text-slate-700 text-sm">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       <form id="forecastDispatchForm" class="p-5 space-y-4">
+        <input type="hidden" id="fcDispatchEditId">
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">Forecast Date (WIT)</label>
           <input type="date" id="fcDispatchDate" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500">
@@ -1619,11 +1620,11 @@
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="block text-xs font-semibold text-slate-700">Client</label>
-            <button type="button" class="openManageClientsModalTrigger text-[10px] font-bold text-sky-700 hover:underline rbac-requires-admin">+ Manage Clients</button>
+            <button type="button" class="openManageClientsModalTrigger text-[10px] font-bold text-sky-700 hover:underline rbac-requires-edit">+ Manage Clients</button>
           </div>
           <select id="fcDispatchClient" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500 font-medium"></select>
           <div id="fcClientEmptyHint" class="hidden mt-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
-            No clients available. Click &apos;Add Client&apos; to create one.
+            No clients available. Click &apos;+ Manage Clients&apos; to add unlimited clients.
           </div>
         </div>
         <div>
@@ -1757,7 +1758,7 @@
     </div>
   </div>
 
-  <!-- 15. ADMIN CLIENT MANAGEMENT MODAL (FULL CRUD) -->
+  <!-- 15. ADMIN CLIENT MANAGEMENT MODAL (UNLIMITED CLIENTS FULL CRUD) -->
   <div id="clientManageModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
       <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -1766,8 +1767,8 @@
             <i class="fa-solid fa-users-gear text-xs"></i>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-slate-900">Manage Clients (Master List)</h3>
-            <p class="text-[11px] text-slate-500">Single source of truth synchronized across all modules</p>
+            <h3 class="text-sm font-bold text-slate-900">Manage Clients (Unlimited Master List)</h3>
+            <p class="text-[11px] text-slate-500">Add unlimited clients (separate with commas to add multiple at once)</p>
           </div>
         </div>
         <button type="button" class="closeModalBtn text-slate-400 hover:text-slate-700 text-sm">
@@ -1775,13 +1776,17 @@
         </button>
       </div>
       <div class="p-5 space-y-4 overflow-y-auto flex-1">
-        <form id="addClientMasterForm" class="flex gap-2">
-          <input type="text" id="newClientMasterNameInput" required placeholder="Enter new client name..." class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-          <button type="submit" class="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold transition shrink-0">
-            <i class="fa-solid fa-plus mr-1"></i>Add Client
-          </button>
+        <form id="addClientMasterForm" class="space-y-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div class="flex gap-2">
+            <input type="text" id="newClientMasterNameInput" required placeholder="e.g. JGC, SAIPEM, PETROSEA, ENI, MEDCO..." class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+            <input type="color" id="newClientMasterColorInput" value="#EF4444" title="Pick badge color" class="w-9 h-9 rounded-xl border border-slate-300 bg-white p-1 cursor-pointer shrink-0">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold transition shrink-0">
+              <i class="fa-solid fa-plus mr-1"></i>Add Client
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500">Unlimited capacity: enter a single client name or comma-separated names for batch creation.</p>
         </form>
-        <div id="clientMasterListBox" class="space-y-2"></div>
+        <div id="clientMasterListBox" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
       </div>
       <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
         <button type="button" class="closeModalBtn px-4 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold">Done</button>
@@ -2060,6 +2065,9 @@
                 try {
                   const incoming = JSON.parse(cloudData.payload);
                   appState.storageConfig = Object.assign({}, appState.storageConfig, incoming.storageConfig);
+                  if (Array.isArray(incoming.clients) && incoming.clients.length > 0) {
+                    appState.clients = incoming.clients;
+                  }
                   appState.bunkerings = incoming.bunkerings || [];
                   appState.soundings = incoming.soundings || [];
                   appState.topups = incoming.topups || [];
@@ -2179,15 +2187,21 @@
       
       const variance = latestSounding !== null ? latestSounding - bookRob : null;
 
-      const contractorTotals = {
-        JGC: 0,
-        SAIPEM: 0,
-        PETROSEA: 0
-      };
+      const contractorTotals = {};
+      (appState.clients || []).forEach(c => {
+        if (c && c.name) contractorTotals[c.name] = 0;
+      });
       appState.bunkerings.forEach(b => {
-        if (contractorTotals.hasOwnProperty(b.contractor)) {
-          contractorTotals[b.contractor] += Number(b.volume) || 0;
+        const key = (b.contractor || '').trim();
+        if (!key) return;
+        const matchedClient = (appState.clients || []).find(
+          c => c.name.toLowerCase() === key.toLowerCase()
+        );
+        const canonicalKey = matchedClient ? matchedClient.name : key;
+        if (!contractorTotals.hasOwnProperty(canonicalKey)) {
+          contractorTotals[canonicalKey] = 0;
         }
+        contractorTotals[canonicalKey] += Number(b.volume) || 0;
       });
 
       return {
@@ -2201,6 +2215,197 @@
         contractorTotals,
         latestSoundingObj: sortedSoundings[0] || null
       };
+    }
+
+    const CLIENT_COLOR_PRESETS = [
+      { label: 'Ruby Red', color: '#EF4444', badgeClass: 'bg-red-50 text-red-700 border-red-200', dotClass: 'bg-red-500' },
+      { label: 'Ocean Blue', color: '#3B82F6', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200', dotClass: 'bg-blue-500' },
+      { label: 'Emerald Green', color: '#10B981', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', dotClass: 'bg-emerald-500' },
+      { label: 'Amber Gold', color: '#F59E0B', badgeClass: 'bg-amber-50 text-amber-700 border-amber-200', dotClass: 'bg-amber-500' },
+      { label: 'Royal Purple', color: '#8B5CF6', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200', dotClass: 'bg-purple-500' },
+      { label: 'Cyan Marine', color: '#06B6D4', badgeClass: 'bg-cyan-50 text-cyan-700 border-cyan-200', dotClass: 'bg-cyan-500' },
+      { label: 'Rose Pink', color: '#F43F5E', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200', dotClass: 'bg-rose-500' },
+      { label: 'Indigo Deep', color: '#6366F1', badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200', dotClass: 'bg-indigo-500' },
+      { label: 'Teal Harbor', color: '#14B8A6', badgeClass: 'bg-teal-50 text-teal-700 border-teal-200', dotClass: 'bg-teal-500' },
+      { label: 'Orange Sunset', color: '#F97316', badgeClass: 'bg-orange-50 text-orange-700 border-orange-200', dotClass: 'bg-orange-500' },
+      { label: 'Fuchsia Berry', color: '#D946EF', badgeClass: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200', dotClass: 'bg-fuchsia-500' },
+      { label: 'Lime Tropic', color: '#84CC16', badgeClass: 'bg-lime-50 text-lime-700 border-lime-200', dotClass: 'bg-lime-500' },
+      { label: 'Sky Horizon', color: '#0EA5E9', badgeClass: 'bg-sky-50 text-sky-700 border-sky-200', dotClass: 'bg-sky-500' },
+      { label: 'Violet Dusk', color: '#7C3AED', badgeClass: 'bg-violet-50 text-violet-700 border-violet-200', dotClass: 'bg-violet-500' },
+      { label: 'Pink Coral', color: '#EC4899', badgeClass: 'bg-pink-50 text-pink-700 border-pink-200', dotClass: 'bg-pink-500' },
+      { label: 'Slate Steel', color: '#475569', badgeClass: 'bg-slate-100 text-slate-700 border-slate-300', dotClass: 'bg-slate-600' }
+    ];
+
+    function hslToHex(h, s, l) {
+      const sNorm = s / 100;
+      const lNorm = l / 100;
+      const a = sNorm * Math.min(lNorm, 1 - lNorm);
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = lNorm - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+      };
+      return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+    }
+
+    function resolveClientColorStyle(index, colorHex) {
+      if (colorHex) {
+        const norm = colorHex.trim().toUpperCase();
+        const match = CLIENT_COLOR_PRESETS.find(p => p.color.toUpperCase() === norm);
+        if (match) return match;
+        const fallback = CLIENT_COLOR_PRESETS[index % CLIENT_COLOR_PRESETS.length];
+        return {
+          color: colorHex.trim(),
+          badgeClass: fallback.badgeClass,
+          dotClass: fallback.dotClass
+        };
+      }
+      if (index < CLIENT_COLOR_PRESETS.length) {
+        return CLIENT_COLOR_PRESETS[index];
+      }
+      const goldenHue = Math.round((index * 137.508) % 360);
+      const fallback = CLIENT_COLOR_PRESETS[index % CLIENT_COLOR_PRESETS.length];
+      return {
+        color: hslToHex(goldenHue, 74, 48),
+        badgeClass: fallback.badgeClass,
+        dotClass: fallback.dotClass
+      };
+    }
+
+    function addClientsToState(rawInput, customColorHex) {
+      const names = String(rawInput || '')
+        .split(/[,;\n]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      if (names.length === 0) return [];
+      if (!Array.isArray(appState.clients)) appState.clients = [];
+
+      const added = [];
+      names.forEach((cleanName, idx) => {
+        const exists = appState.clients.some(c => c.name.toLowerCase() === cleanName.toLowerCase());
+        if (!exists) {
+          const style = resolveClientColorStyle(
+            appState.clients.length,
+            names.length === 1 ? customColorHex : undefined
+          );
+          const now = new Date().toISOString();
+          const newClient = {
+            id: `client_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`,
+            name: cleanName,
+            color: style.color,
+            badgeClass: style.badgeClass,
+            dotClass: style.dotClass,
+            createdAt: now,
+            updatedAt: now
+          };
+          appState.clients.push(newClient);
+          added.push(newClient);
+        }
+      });
+      return added;
+    }
+
+    function renderClientMasterUI(summary) {
+      const clients = Array.isArray(appState.clients) ? appState.clients : [];
+      const canEdit = Boolean(currentUser && (currentUser.canEdit || currentUser.canManageStorage));
+      const canDelete = Boolean(currentUser && (currentUser.canDelete || currentUser.canManageStorage));
+
+      // 1. Sidebar Clients List
+      const sidebarBox = document.getElementById('sidebarClientsContainer');
+      if (sidebarBox) {
+        if (clients.length === 0) {
+          sidebarBox.innerHTML = `
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center space-y-1.5">
+              <p class="text-[11px] text-slate-400">No clients available. Click '+ Add / Manage' to add unlimited clients.</p>
+            </div>
+          `;
+        } else {
+          sidebarBox.innerHTML = clients.map(c => {
+            const vol = summary.contractorTotals[c.name] || 0;
+            return `
+              <div class="px-2.5 py-1.5 rounded-lg border flex items-center justify-between ${c.badgeClass || 'bg-slate-50 text-slate-700 border-slate-200'}">
+                <span class="flex items-center gap-2 truncate">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${c.color || '#0284C7'}"></span>
+                  <span class="truncate">${escapeHtml(c.name)}</span>
+                </span>
+                <span class="font-mono font-bold shrink-0">${formatNumber(vol)} L</span>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // 2. Dispatch Contractor Select & Forecast Dispatch Client Select
+      const dispSelect = document.getElementById('dispatchContractor');
+      const dispHint = document.getElementById('dispatchClientEmptyHint');
+      const fcSelect = document.getElementById('fcDispatchClient');
+      const fcHint = document.getElementById('fcClientEmptyHint');
+      const filterSelect = document.getElementById('dispatchContractorFilter');
+
+      const optionsHtml = clients.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+
+      if (dispSelect) {
+        const prev = dispSelect.value;
+        dispSelect.innerHTML = optionsHtml;
+        if (prev && clients.some(c => c.name === prev)) dispSelect.value = prev;
+      }
+      if (dispHint) {
+        if (clients.length === 0) dispHint.classList.remove('hidden');
+        else dispHint.classList.add('hidden');
+      }
+
+      if (fcSelect) {
+        const prev = fcSelect.value;
+        fcSelect.innerHTML = optionsHtml;
+        if (prev && clients.some(c => c.name === prev)) fcSelect.value = prev;
+      }
+      if (fcHint) {
+        if (clients.length === 0) fcHint.classList.remove('hidden');
+        else fcHint.classList.add('hidden');
+      }
+
+      if (filterSelect) {
+        const prevFilter = filterSelect.value || 'ALL';
+        filterSelect.innerHTML = `<option value="ALL">All Clients (${clients.length})</option>` + optionsHtml;
+        if (prevFilter === 'ALL' || clients.some(c => c.name === prevFilter)) {
+          filterSelect.value = prevFilter;
+        }
+      }
+
+      // 3. Manage Clients Modal List
+      const modalList = document.getElementById('clientMasterListBox');
+      if (modalList) {
+        if (clients.length === 0) {
+          modalList.innerHTML = `
+            <div class="p-6 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
+              No clients registered yet. Enter client name(s) above to add unlimited clients.
+            </div>
+          `;
+        } else {
+          modalList.innerHTML = clients.map(c => {
+            const vol = summary.contractorTotals[c.name] || 0;
+            return `
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${c.color || '#0284C7'}"></span>
+                  <span class="text-xs font-bold text-slate-900 truncate">${escapeHtml(c.name)}</span>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded border ${c.badgeClass || 'bg-slate-50 text-slate-700 border-slate-200'}">${formatNumber(vol)} L</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  ${canEdit ? `<button type="button" data-id="${c.id}" class="rename-master-client-btn px-2 py-1 rounded text-xs font-semibold text-sky-700 hover:bg-sky-50"><i class="fa-solid fa-pen mr-1"></i>Rename</button>` : ''}
+                  ${canDelete ? `<button type="button" data-id="${c.id}" class="delete-master-client-btn px-2 py-1 rounded text-xs font-semibold text-rose-600 hover:bg-rose-50"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Next default color in picker
+      const colorInput = document.getElementById('newClientMasterColorInput');
+      if (colorInput) {
+        colorInput.value = resolveClientColorStyle(clients.length).color;
+      }
     }
 
     function calculateFlowRate(volume, startTime, endTime) {
@@ -2453,27 +2658,38 @@
       }
     }
 
-    // --- 9. CHART.JS VISUALIZATIONS ---
+    // --- 9. CHART.JS VISUALIZATIONS (UNLIMITED CLIENTS) ---
     function renderCharts() {
       const summary = calculateSummary();
+      const clients = Array.isArray(appState.clients) ? appState.clients : [];
 
       const doughnutCtx = document.getElementById('contractorDoughnutChart');
       const emptyDoughnutState = document.getElementById('doughnutEmptyState');
-      
-      const { JGC, SAIPEM, PETROSEA } = summary.contractorTotals;
-      const totalContractor = JGC + SAIPEM + PETROSEA;
+      const emptyDoughnutText = document.getElementById('doughnutEmptyStateText');
 
-      if (totalContractor > 0) {
-        emptyDoughnutState.classList.add('hidden');
-      } else {
-        emptyDoughnutState.classList.remove('hidden');
+      const labels = clients.map(c => c.name);
+      const dataValues = clients.map(c => summary.contractorTotals[c.name] || 0);
+      const bgColors = clients.map((c, idx) => c.color || resolveClientColorStyle(idx).color);
+      const totalContractor = dataValues.reduce((a, b) => a + b, 0);
+
+      if (emptyDoughnutState) {
+        if (clients.length > 0 && totalContractor > 0) {
+          emptyDoughnutState.classList.add('hidden');
+        } else {
+          emptyDoughnutState.classList.remove('hidden');
+          if (emptyDoughnutText) {
+            emptyDoughnutText.textContent = clients.length === 0
+              ? "No clients available. Click 'Manage Clients' to add unlimited clients."
+              : "No B50 bunker dispatches recorded yet.";
+          }
+        }
       }
 
       const doughnutData = {
-        labels: ['JGC', 'SAIPEM', 'PETROSEA'],
+        labels: labels,
         datasets: [{
-          data: [JGC, SAIPEM, PETROSEA],
-          backgroundColor: ['#EF4444', '#3B82F6', '#10B981'],
+          data: dataValues,
+          backgroundColor: bgColors,
           borderWidth: 2,
           borderColor: '#FFFFFF',
           hoverOffset: 6
@@ -2507,20 +2723,41 @@
         });
       }
 
-      const pJgc = totalContractor > 0 ? ((JGC / totalContractor) * 100).toFixed(1) : '0';
-      const pSaipem = totalContractor > 0 ? ((SAIPEM / totalContractor) * 100).toFixed(1) : '0';
-      const pPetro = totalContractor > 0 ? ((PETROSEA / totalContractor) * 100).toFixed(1) : '0';
-
-      document.getElementById('legendJgcText').textContent = `${formatNumber(JGC)} L (${pJgc}%)`;
-      document.getElementById('legendSaipemText').textContent = `${formatNumber(SAIPEM)} L (${pSaipem}%)`;
-      document.getElementById('legendPetroseaText').textContent = `${formatNumber(PETROSEA)} L (${pPetro}%)`;
-
-      document.getElementById('sidebarJgcTotal').textContent = `${formatNumber(JGC)} L`;
-      document.getElementById('sidebarSaipemTotal').textContent = `${formatNumber(SAIPEM)} L`;
-      document.getElementById('sidebarPetroseaTotal').textContent = `${formatNumber(PETROSEA)} L`;
+      // Populate dynamic dashboard legend table (unlimited clients)
+      const legendBox = document.getElementById('dashboardClientLegendContainer');
+      if (legendBox) {
+        legendBox.className = 'space-y-2 mt-4 pt-3 border-t border-slate-100 max-h-52 overflow-y-auto pr-1';
+        legendBox.innerHTML = clients.map((c, idx) => {
+          const vol = summary.contractorTotals[c.name] || 0;
+          const pct = totalContractor > 0 ? ((vol / totalContractor) * 100).toFixed(1) : '0';
+          const color = c.color || resolveClientColorStyle(idx).color;
+          return `
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+                <span class="font-bold text-slate-700 truncate">${escapeHtml(c.name)}</span>
+              </div>
+              <span class="font-mono font-bold text-slate-900 shrink-0">${formatNumber(vol)} L (${pct}%)</span>
+            </div>
+          `;
+        }).join('');
+      }
 
       const trendlineCtx = document.getElementById('dispatchTrendlineChart');
       const emptyTrendlineState = document.getElementById('trendlineEmptyState');
+      const trendLegendBox = document.getElementById('trendlineClientLegendContainer');
+
+      if (trendLegendBox) {
+        trendLegendBox.innerHTML = clients.map((c, idx) => {
+          const color = c.color || resolveClientColorStyle(idx).color;
+          return `
+            <span class="inline-flex items-center gap-1.5 font-semibold text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-xs shrink-0" style="background-color: ${color}"></span>
+              <span>${escapeHtml(c.name)}</span>
+            </span>
+          `;
+        }).join('');
+      }
 
       const days = [];
       const now = getNowWIT();
@@ -2529,25 +2766,17 @@
         days.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
       }
 
-      const jgcDaily = days.map(() => 0);
-      const saipemDaily = days.map(() => 0);
-      const petroseaDaily = days.map(() => 0);
-
       let hasTrendData = false;
       appState.bunkerings.forEach(item => {
-        const idx = days.indexOf(item.date);
-        if (idx !== -1) {
-          hasTrendData = true;
-          if (item.contractor === 'JGC') jgcDaily[idx] += Number(item.volume) || 0;
-          if (item.contractor === 'SAIPEM') saipemDaily[idx] += Number(item.volume) || 0;
-          if (item.contractor === 'PETROSEA') petroseaDaily[idx] += Number(item.volume) || 0;
-        }
+        if (days.indexOf(item.date) !== -1) hasTrendData = true;
       });
 
-      if (hasTrendData) {
-        emptyTrendlineState.classList.add('hidden');
-      } else {
-        emptyTrendlineState.classList.remove('hidden');
+      if (emptyTrendlineState) {
+        if (hasTrendData) {
+          emptyTrendlineState.classList.add('hidden');
+        } else {
+          emptyTrendlineState.classList.remove('hidden');
+        }
       }
 
       const formattedLabels = days.map(d => {
@@ -2555,37 +2784,27 @@
         return `${parts[2]}/${parts[1]}`;
       });
 
+      const datasets = clients.map((client, idx) => {
+        const color = client.color || resolveClientColorStyle(idx).color;
+        const dailyVols = days.map(dayIso => {
+          return appState.bunkerings
+            .filter(b => b.date === dayIso && (b.contractor || '').toLowerCase() === client.name.toLowerCase())
+            .reduce((acc, item) => acc + (Number(item.volume) || 0), 0);
+        });
+        return {
+          label: client.name,
+          data: dailyVols,
+          borderColor: color,
+          backgroundColor: `${color}1A`,
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2
+        };
+      });
+
       const trendData = {
         labels: formattedLabels,
-        datasets: [
-          {
-            label: 'JGC',
-            data: jgcDaily,
-            borderColor: '#EF4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2
-          },
-          {
-            label: 'SAIPEM',
-            data: saipemDaily,
-            borderColor: '#3B82F6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2
-          },
-          {
-            label: 'PETROSEA',
-            data: petroseaDaily,
-            borderColor: '#10B981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2
-          }
-        ]
+        datasets: datasets
       };
 
       if (trendlineChartInstance) {
@@ -2683,11 +2902,12 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
 
-        const contractorBadgeColors = {
-          JGC: 'bg-red-50 text-red-700 border-red-200',
-          SAIPEM: 'bg-blue-50 text-blue-700 border-blue-200',
-          PETROSEA: 'bg-emerald-50 text-emerald-700 border-emerald-200'
-        }[item.contractor] || 'bg-slate-50 text-slate-700 border-slate-200';
+        const matchedClient = (appState.clients || []).find(
+          c => c.name.toLowerCase() === (item.contractor || '').toLowerCase()
+        );
+        const contractorBadgeColors = matchedClient
+          ? matchedClient.badgeClass
+          : 'bg-slate-50 text-slate-700 border-slate-200';
 
         const flowRate = calculateFlowRate(item.volume, item.startTime, item.endTime);
 
@@ -2865,6 +3085,7 @@
 
     function renderAllViews() {
       const summary = calculateSummary();
+      renderClientMasterUI(summary);
       renderDashboardKPIs(summary);
       renderHullVisualizer(summary);
       renderCharts();
@@ -2955,16 +3176,13 @@
 
         currentFloatingRunning = currentFloatingRunning + totalDayTopup - totalDayDispatch;
 
-        // Group dispatches by client matrix: JGC, SAIPEM, PETROSEA, OTHERS
-        const clientGroups = {
-          JGC: dayDispatches.filter(d => (d.client || '').toUpperCase() === 'JGC'),
-          SAIPEM: dayDispatches.filter(d => (d.client || '').toUpperCase() === 'SAIPEM'),
-          PETROSEA: dayDispatches.filter(d => (d.client || '').toUpperCase() === 'PETROSEA' || (d.client || '').toUpperCase() === 'PTP'),
-          OTHERS: dayDispatches.filter(d => {
-            const c = (d.client || '').toUpperCase();
-            return c !== 'JGC' && c !== 'SAIPEM' && c !== 'PETROSEA' && c !== 'PTP';
-          })
-        };
+        // Dynamically group dispatches for unlimited clients in appState.clients
+        const clientGroups = {};
+        (appState.clients || []).forEach(c => {
+          clientGroups[c.name] = dayDispatches.filter(
+            d => (d.client || '').trim().toLowerCase() === c.name.toLowerCase()
+          );
+        });
 
         floatingTimeline.push({
           iso: td.iso,
@@ -3070,48 +3288,55 @@
       theadHtml += '</tr>';
       thead.innerHTML = theadHtml;
 
-      const clients = [
-        { key: 'JGC', label: 'JGC', badgeClass: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-        { key: 'SAIPEM', label: 'SAIPEM', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-        { key: 'PETROSEA', label: 'PETROSEA', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-        { key: 'OTHERS', label: 'OTHERS', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' }
-      ];
+      const clients = Array.isArray(appState.clients) ? appState.clients : [];
 
       let clientRowsHtml = '';
-      clients.forEach(c => {
-        clientRowsHtml += `<tr><td class="p-2.5 font-bold sticky left-0 bg-white z-10 border-r border-slate-200 shadow-xs flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full ${c.dot}"></span>
-          <span>${c.label}</span>
-        </td>`;
-
-        timeline.forEach(t => {
-          const list = t.clientGroups[c.key] || [];
-          let cellContent = '';
-
-          if (list.length > 0) {
-            list.forEach(d => {
-              cellContent += `
-                <div class="mb-1 p-1 rounded text-[10px] font-medium border ${c.badgeClass} text-left cursor-pointer hover:ring-2 hover:ring-sky-400 fc-existing-item" data-type="dispatch" data-id="${d.id}" data-date="${t.iso}" data-client="${c.key}" title="Click to Edit or Delete: ${escapeHtml(d.vessel)} (${formatNumber(d.volume)} L)">
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold truncate">${escapeHtml(d.vessel)}</span>
-                    <i class="fa-solid fa-pen text-[9px] opacity-70"></i>
-                  </div>
-                  <div class="font-mono">${formatNumber(d.volume)} L</div>
-                </div>
-              `;
-            });
-          } else {
-            cellContent = '<span class="text-slate-300 text-[11px]">-</span>';
-          }
-
-          clientRowsHtml += `
-            <td class="p-2 text-center border-r border-slate-200 align-top cursor-pointer hover:bg-sky-50/60 transition fc-floating-cell" data-date="${t.iso}" data-client="${c.key}" title="Click to add or manage for ${c.label} on ${t.iso}">
-              ${cellContent}
+      if (clients.length === 0) {
+        clientRowsHtml = `
+          <tr>
+            <td colspan="${timeline.length + 1}" class="p-6 text-center bg-slate-50/60 text-xs text-slate-500">
+              No clients available. Click <strong>Manage Clients</strong> to add unlimited clients to the forecast matrix.
             </td>
-          `;
+          </tr>
+        `;
+      } else {
+        clients.forEach((c, idx) => {
+          const color = c.color || resolveClientColorStyle(idx).color;
+          const badgeClass = c.badgeClass || 'bg-slate-50 text-slate-700 border-slate-200';
+          clientRowsHtml += `<tr><td class="p-2.5 font-bold sticky left-0 bg-white z-10 border-r border-slate-200 shadow-xs flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+            <span class="truncate">${escapeHtml(c.name)}</span>
+          </td>`;
+
+          timeline.forEach(t => {
+            const list = t.clientGroups[c.name] || [];
+            let cellContent = '';
+
+            if (list.length > 0) {
+              list.forEach(d => {
+                cellContent += `
+                  <div class="mb-1 p-1 rounded text-[10px] font-medium border ${badgeClass} text-left cursor-pointer hover:ring-2 hover:ring-sky-400 fc-existing-item" data-type="dispatch" data-id="${d.id}" data-date="${t.iso}" data-client="${escapeHtml(c.name)}" title="Click to Edit or Delete: ${escapeHtml(d.vessel)} (${formatNumber(d.volume)} L)">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold truncate">${escapeHtml(d.vessel)}</span>
+                      <i class="fa-solid fa-pen text-[9px] opacity-70"></i>
+                    </div>
+                    <div class="font-mono">${formatNumber(d.volume)} L</div>
+                  </div>
+                `;
+              });
+            } else {
+              cellContent = '<span class="text-slate-300 text-[11px]">-</span>';
+            }
+
+            clientRowsHtml += `
+              <td class="p-2 text-center border-r border-slate-200 align-top cursor-pointer hover:bg-sky-50/60 transition fc-floating-cell" data-date="${t.iso}" data-client="${escapeHtml(c.name)}" title="Click to add or manage for ${escapeHtml(c.name)} on ${t.iso}">
+                ${cellContent}
+              </td>
+            `;
+          });
+          clientRowsHtml += '</tr>';
         });
-        clientRowsHtml += '</tr>';
-      });
+      }
 
       // Top-up Row
       let topupRowHtml = '<tr><td class="p-2.5 font-bold sticky left-0 bg-white z-10 border-r border-slate-200 text-teal-800 shadow-xs flex items-center gap-1.5"><i class="fa-solid fa-ship text-teal-600"></i> Top-Up Inbound</td>';
@@ -3487,8 +3712,8 @@
             json.forEach((row, i) => {
               const dateVal = row['Date'] || row['date'] || getWITIsoDate();
               const vesselVal = row['Vessel'] || row['vessel'] || row['Receiving Vessel'] || `Vessel-${i+1}`;
-              const contractorRaw = (row['Contractor'] || row['contractor'] || 'JGC').toString().toUpperCase().trim();
-              const validContractor = ['JGC', 'SAIPEM', 'PETROSEA'].includes(contractorRaw) ? contractorRaw : 'JGC';
+              const contractorRaw = (row['Contractor'] || row['contractor'] || row['Client'] || row['client'] || (appState.clients[0]?.name || 'CLIENT')).toString().trim();
+              const validContractor = contractorRaw || (appState.clients[0]?.name || 'CLIENT');
               const volVal = Number(row['Volume'] || row['volume'] || row['Liters'] || 0);
               const startVal = row['Start'] || row['start'] || '08:00';
               const endVal = row['End'] || row['end'] || '10:00';
@@ -3528,6 +3753,9 @@
 
       executeBtn.addEventListener('click', () => {
         if (!pendingExcelData || pendingExcelData.length === 0) return;
+        pendingExcelData.forEach(item => {
+          if (item.contractor) addClientsToState(item.contractor);
+        });
         appState.bunkerings.push(...pendingExcelData);
         saveState();
         renderAllViews();
@@ -3593,9 +3821,10 @@
           { Metric: 'Current Book ROB (L)', Value: sum.bookRob },
           { Metric: 'Latest Physical Sounding (L)', Value: sum.latestSounding !== null ? sum.latestSounding : 'N/A' },
           { Metric: 'Current Variance (L)', Value: sum.variance !== null ? sum.variance : 'N/A' },
-          { Metric: 'JGC Cumulative Volume (L)', Value: sum.contractorTotals.JGC },
-          { Metric: 'SAIPEM Cumulative Volume (L)', Value: sum.contractorTotals.SAIPEM },
-          { Metric: 'PETROSEA Cumulative Volume (L)', Value: sum.contractorTotals.PETROSEA }
+          ...(appState.clients || []).map(c => ({
+            Metric: `${c.name} Cumulative Volume (L)`,
+            Value: sum.contractorTotals[c.name] || 0
+          }))
         ];
         const wsSummary = XLSX.utils.json_to_sheet(summaryData);
         XLSX.utils.book_append_sheet(wb, wsSummary, 'Inventory Reconciliation');
@@ -3619,29 +3848,22 @@
         document.getElementById('pdfDispatchedRob').textContent = `${formatNumber(summary.totalDispatched)} L`;
         document.getElementById('pdfBookRob').textContent = `${formatNumber(summary.bookRob)} L`;
 
-        const { JGC, SAIPEM, PETROSEA } = summary.contractorTotals;
-        const total = JGC + SAIPEM + PETROSEA;
-        const pJgc = total > 0 ? ((JGC / total) * 100).toFixed(1) : '0';
-        const pSai = total > 0 ? ((SAIPEM / total) * 100).toFixed(1) : '0';
-        const pPet = total > 0 ? ((PETROSEA / total) * 100).toFixed(1) : '0';
+        const clients = Array.isArray(appState.clients) ? appState.clients : [];
+        const total = clients.reduce((acc, c) => acc + (summary.contractorTotals[c.name] || 0), 0);
 
-        document.getElementById('pdfContractorRows').innerHTML = `
-          <tr class="border-b border-slate-200">
-            <td class="p-2 font-bold text-red-700">JGC</td>
-            <td class="p-2 text-right font-mono">${formatNumber(JGC)} L</td>
-            <td class="p-2 text-right font-mono">${pJgc}%</td>
-          </tr>
-          <tr class="border-b border-slate-200">
-            <td class="p-2 font-bold text-blue-700">SAIPEM</td>
-            <td class="p-2 text-right font-mono">${formatNumber(SAIPEM)} L</td>
-            <td class="p-2 text-right font-mono">${pSai}%</td>
-          </tr>
-          <tr class="border-b border-slate-200">
-            <td class="p-2 font-bold text-emerald-700">PETROSEA</td>
-            <td class="p-2 text-right font-mono">${formatNumber(PETROSEA)} L</td>
-            <td class="p-2 text-right font-mono">${pPet}%</td>
-          </tr>
-        `;
+        document.getElementById('pdfContractorRows').innerHTML = clients.length === 0
+          ? '<tr><td colspan="3" class="p-2 text-center text-slate-400">No clients registered</td></tr>'
+          : clients.map(c => {
+              const vol = summary.contractorTotals[c.name] || 0;
+              const pct = total > 0 ? ((vol / total) * 100).toFixed(1) : '0';
+              return `
+                <tr class="border-b border-slate-200">
+                  <td class="p-2 font-bold" style="color: ${c.color || '#0284C7'}">${escapeHtml(c.name)}</td>
+                  <td class="p-2 text-right font-mono">${formatNumber(vol)} L</td>
+                  <td class="p-2 text-right font-mono">${pct}%</td>
+                </tr>
+              `;
+            }).join('');
 
         const recentDispatches = [...appState.bunkerings]
           .sort((a, b) => new Date(`${b.date}T${b.startTime || '00:00'}`) - new Date(`${a.date}T${a.startTime || '00:00'}`))
@@ -3762,7 +3984,8 @@
           document.getElementById('fcDispatchEditId').value = '';
           document.getElementById('forecastDispatchModalTitle').textContent = `Add Distribution Plan (${appState.storageConfig.vesselName || 'SPOB TRANS BILGIT'})`;
           document.getElementById('fcDispatchDate').value = getWITIsoDate();
-          document.getElementById('fcDispatchClient').value = 'JGC';
+          const defaultClient = (appState.clients && appState.clients[0] && appState.clients[0].name) || 'JGC';
+          document.getElementById('fcDispatchClient').value = defaultClient;
           fcDispatchModal.classList.remove('hidden');
         });
       }
@@ -3811,10 +4034,14 @@
           if (!currentUser || !currentUser.canEdit) return;
 
           const editId = document.getElementById('fcDispatchEditId').value;
+          const clientName = document.getElementById('fcDispatchClient').value.trim().toUpperCase();
+          if (clientName && !appState.clients.some(c => c.name.toUpperCase() === clientName)) {
+            addClientsToState(clientName);
+          }
           const record = {
             id: editId || 'fcd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             date: document.getElementById('fcDispatchDate').value,
-            client: document.getElementById('fcDispatchClient').value.trim(),
+            client: clientName,
             vessel: document.getElementById('fcDispatchVessel').value.trim(),
             volume: Number(document.getElementById('fcDispatchVolume').value) || 0
           };
@@ -4021,7 +4248,8 @@
       function openFloatingChooser(date, preselectedClient) {
         if (!currentUser || !currentUser.canEdit) return;
         selectedChooserDate = date;
-        selectedChooserClient = preselectedClient || 'JGC';
+        const defaultClient = (appState.clients && appState.clients[0] && appState.clients[0].name) || 'JGC';
+        selectedChooserClient = preselectedClient || defaultClient;
         document.getElementById('chooserDateLabel').textContent = date;
         document.getElementById('chooserStorageName').textContent = appState.storageConfig.vesselName || 'SPOB TRANS BILGIT';
         actionChooserModal.classList.remove('hidden');
@@ -4073,11 +4301,12 @@
 
           const colHeader = e.target.closest('.fc-floating-date-col');
           const matrixCell = e.target.closest('.fc-floating-cell');
+          const defaultClient = (appState.clients && appState.clients[0] && appState.clients[0].name) || 'JGC';
 
           if (colHeader && currentUser && currentUser.canEdit) {
-            openFloatingChooser(colHeader.dataset.date, 'JGC');
+            openFloatingChooser(colHeader.dataset.date, defaultClient);
           } else if (matrixCell && currentUser && currentUser.canEdit) {
-            openFloatingChooser(matrixCell.dataset.date, matrixCell.dataset.client || 'JGC');
+            openFloatingChooser(matrixCell.dataset.date, matrixCell.dataset.client || defaultClient);
           }
         });
       }
@@ -4144,6 +4373,113 @@
               renderForecastViews();
               showToast('Top-up plan removed.', 'info');
             });
+          }
+        });
+      }
+
+      // Unlimited Client / Contractor Master Directory Modal Handlers
+      const clientManageModal = document.getElementById('clientManageModal');
+      document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.openManageClientsModalTrigger');
+        if (trigger && clientManageModal) {
+          if (!currentUser || (!currentUser.canEdit && !currentUser.canReset)) {
+            showToast('Access Denied: Only Operational Staff or Admin can manage clients.', 'error');
+            return;
+          }
+          const summary = calculateSummary();
+          renderClientMasterUI(summary);
+          const colorInput = document.getElementById('newClientColorInput');
+          if (colorInput) {
+            const nextPreset = resolveClientColorStyle((appState.clients || []).length);
+            colorInput.value = nextPreset.color;
+          }
+          clientManageModal.classList.remove('hidden');
+        }
+      });
+
+      const addClientMasterForm = document.getElementById('addClientMasterForm');
+      if (addClientMasterForm) {
+        addClientMasterForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!currentUser || (!currentUser.canEdit && !currentUser.canReset)) return;
+          const nameInput = document.getElementById('newClientNameInput');
+          const colorInput = document.getElementById('newClientColorInput');
+          const rawValue = nameInput ? nameInput.value : '';
+          const colorVal = colorInput ? colorInput.value : null;
+
+          const added = addClientsToState(rawValue, colorVal);
+          if (added.length === 0) {
+            showToast('Client name is empty or already exists.', 'warning');
+            return;
+          }
+
+          saveState();
+          renderAllViews();
+          if (nameInput) nameInput.value = '';
+          if (colorInput) {
+            const nextPreset = resolveClientColorStyle((appState.clients || []).length);
+            colorInput.value = nextPreset.color;
+          }
+          showToast(
+            added.length > 1
+              ? `Added ${added.length} clients (${added.map(c => c.name).join(', ')})`
+              : `Client "${added[0].name}" added to master directory.`,
+            'success'
+          );
+        });
+      }
+
+      const clientMasterListBox = document.getElementById('clientMasterListBox');
+      if (clientMasterListBox) {
+        clientMasterListBox.addEventListener('click', (e) => {
+          const renameBtn = e.target.closest('.rename-master-client-btn');
+          if (renameBtn) {
+            if (!currentUser || (!currentUser.canEdit && !currentUser.canReset)) return;
+            const id = renameBtn.dataset.id;
+            const targetClient = (appState.clients || []).find(c => c.id === id);
+            if (!targetClient) return;
+            const newNameRaw = prompt(`Rename client "${targetClient.name}" to:`, targetClient.name);
+            if (!newNameRaw) return;
+            const newName = newNameRaw.trim().toUpperCase();
+            if (!newName || newName === targetClient.name.toUpperCase()) return;
+            if ((appState.clients || []).some(c => c.id !== id && c.name.toUpperCase() === newName)) {
+              showToast(`Client "${newName}" already exists.`, 'error');
+              return;
+            }
+            const oldName = targetClient.name;
+            targetClient.name = newName;
+            // Cascade rename across bunkerings and forecastDispatches
+            appState.bunkerings.forEach(b => {
+              if ((b.client || '').toUpperCase() === oldName.toUpperCase()) b.client = newName;
+            });
+            appState.forecastDispatches.forEach(d => {
+              if ((d.client || '').toUpperCase() === oldName.toUpperCase()) d.client = newName;
+            });
+            saveState();
+            renderAllViews();
+            showToast(`Renamed "${oldName}" to "${newName}" across all records.`, 'success');
+            return;
+          }
+
+          const deleteBtn = e.target.closest('.delete-master-client-btn');
+          if (deleteBtn) {
+            if (!currentUser || !currentUser.canReset) {
+              showToast('Access Denied: Only Administrator can delete clients.', 'error');
+              return;
+            }
+            const id = deleteBtn.dataset.id;
+            const targetClient = (appState.clients || []).find(c => c.id === id);
+            if (!targetClient) return;
+            showConfirmModal(
+              'Delete Client / Contractor',
+              `Remove "${targetClient.name}" from the active client directory? Historical bunkering logs will remain intact.`,
+              () => {
+                appState.clients = (appState.clients || []).filter(c => c.id !== id);
+                saveState();
+                renderAllViews();
+                showToast(`Client "${targetClient.name}" removed from directory.`, 'info');
+              }
+            );
           }
         });
       }

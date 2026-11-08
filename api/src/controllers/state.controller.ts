@@ -10,15 +10,14 @@ export class StateController {
     username: string | null | undefined,
     nextState: AppOperationalState
   ): Promise<AppOperationalState> {
-    RbacMiddleware.requireEdit(username);
+    await RbacMiddleware.requireEdit(username);
     return DatabaseAdapter.saveState(nextState);
   }
 
   static async resetState(
     username: string | null | undefined
   ): Promise<AppOperationalState> {
-    RbacMiddleware.requireAdmin(username);
+    await RbacMiddleware.requireAdmin(username);
     return DatabaseAdapter.resetState();
   }
 }
-

@@ -44,7 +44,9 @@ export function ForecastView() {
 
   const canEdit = Boolean(currentUser?.canEdit);
   const canDelete = Boolean(currentUser?.canDelete);
-  const isAdmin = Boolean(currentUser?.canManageClients);
+  const isAdmin = Boolean(
+    currentUser?.canManageClients || currentUser?.canEdit
+  );
 
   const vesselName = state.storageConfig.vesselName || 'SPOB TRANS BILGIT';
   const shoreName = state.storageConfig.shoreTankName || 'SHORE TANK COMBO';
@@ -308,7 +310,8 @@ export function ForecastView() {
                     <td className="p-2.5 font-bold sticky left-0 bg-white z-10 border-r border-slate-200 shadow-xs">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`w-2.5 h-2.5 rounded-full shrink-0 ${client.dotClass}`}
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: client.color }}
                         />
                         <span className="truncate">{client.name}</span>
                       </div>

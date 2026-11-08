@@ -8,5 +8,6 @@ export * from './services/ForecastService';
 export * from './services/InventoryService';
 export * from './services/AuthService';
 export * from './db/seed';
+export * from './db/SupabaseProvider';
 export * from './db/DatabaseAdapter';
 
