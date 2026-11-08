@@ -668,14 +668,6 @@ BEGIN
   RETURN v_result;
 END;
 $$;
-  INNER JOIN public.rbac_roles r ON r.role_code = u.role_code
-  WHERE LOWER(u.username) = LOWER(TRIM(COALESCE(p_username, '')))
-    AND u.is_active = true
-  LIMIT 1;
-
-  RETURN v_result;
-END;
-$$;
 
 -- 13.3 Assemble Full Application State from Relational Tables
 CREATE OR REPLACE FUNCTION public.get_full_operational_state()
