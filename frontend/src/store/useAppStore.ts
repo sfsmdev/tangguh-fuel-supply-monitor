@@ -1,0 +1,681 @@
+'use client';
+
+import { create } from 'zustand';
+import {
+  AppOperationalState,
+  AuthService,
+  BunkeringRecord,
+  ClientRecord,
+  ClientService,
+  createCleanInitialState,
+  ForecastDispatch,
+  ForecastTopup,
+   formatNumber,
+  InventoryService,
+  sanitizeOperationalState,
+  SoundingRecord,
+  StorageConfig,
+  TopupRecord,
+  TopupStatus,
+  UserAccount,
+  ViewId,
+} from '@backend/index';
+
+const STORAGE_KEY = 'tangguh_fuel_state_v2_clean';
+const SESSION_KEY = 'tangguh_active_session_v2';
+
+export interface ToastItem {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+}
+
+export interface ConfirmDialogState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  onConfirm: (() => void) | null;
+}
+
+interface AppStore {
+  state: AppOperationalState;
+  currentUser: UserAccount | null;
+  activeView: ViewId;
+  forecastHorizonDays: number;
+  isHydrated: boolean;
+
+  // Global UI Modals
+  isClientModalOpen: boolean;
+  isSwitchUserModalOpen: boolean;
+  isQuickRobModalOpen: boolean;
+  isBulkImportModalOpen: boolean;
+
+  // Record Modals
+  dispatchModal: { isOpen: boolean; editItem?: BunkeringRecord | null };
+  soundingModal: { isOpen: boolean; editItem?: SoundingRecord | null };
+  topupModal: {
+    isOpen: boolean;
+    editItem?: TopupRecord | null;
+    defaultStatus?: TopupStatus;
+  };
+  docPreviewModal: { isOpen: boolean; title: string; dataUrl: string };
+
+  // Forecast Modals
+  forecastDispatchModal: {
+    isOpen: boolean;
+    editItem?: ForecastDispatch | null;
+    defaultDate?: string;
+    defaultClient?: string;
+  };
+  forecastTopupModal: {
+    isOpen: boolean;
+    editItem?: ForecastTopup | null;
+    defaultDate?: string;
+    defaultTarget?: 'floating' | 'shore' | 'both';
+  };
+  floatingChooserModal: {
+    isOpen: boolean;
+    date: string;
+    preselectedClient?: string;
+  };
+  recordManageModal: {
+    isOpen: boolean;
+    type: 'dispatch' | 'topup';
+    id: string;
+    date: string;
+    clientHint?: string;
+  };
+
+  // Notifications & Confirmations
+  toasts: ToastItem[];
+  confirmDialog: ConfirmDialogState;
+
+  // Hydrate & Sync
+  hydrate: () => Promise<void>;
+  persistState: (nextState: AppOperationalState) => void;
+
+  // Auth Actions
+  login: (username: string, password: string) => boolean;
+  logout: () => void;
+
+  // View & UI Actions
+  setActiveView: (view: ViewId) => void;
+  setForecastHorizonDays: (days: number) => void;
+  setClientModalOpen: (open: boolean) => void;
+  setSwitchUserModalOpen: (open: boolean) => void;
+  setQuickRobModalOpen: (open: boolean) => void;
+  setBulkImportModalOpen: (open: boolean) => void;
+
+  setDispatchModal: (modal: {
+    isOpen: boolean;
+    editItem?: BunkeringRecord | null;
+  }) => void;
+  setSoundingModal: (modal: {
+    isOpen: boolean;
+    editItem?: SoundingRecord | null;
+  }) => void;
+  setTopupModal: (modal: {
+    isOpen: boolean;
+    editItem?: TopupRecord | null;
+    defaultStatus?: TopupStatus;
+  }) => void;
+  setDocPreviewModal: (modal: {
+    isOpen: boolean;
+    title: string;
+    dataUrl: string;
+  }) => void;
+
+  setForecastDispatchModal: (modal: {
+    isOpen: boolean;
+    editItem?: ForecastDispatch | null;
+    defaultDate?: string;
+    defaultClient?: string;
+  }) => void;
+  setForecastTopupModal: (modal: {
+    isOpen: boolean;
+    editItem?: ForecastTopup | null;
+    defaultDate?: string;
+    defaultTarget?: 'floating' | 'shore' | 'both';
+  }) => void;
+  setFloatingChooserModal: (modal: {
+    isOpen: boolean;
+    date: string;
+    preselectedClient?: string;
+  }) => void;
+  setRecordManageModal: (modal: {
+    isOpen: boolean;
+    type: 'dispatch' | 'topup';
+    id: string;
+    date: string;
+    clientHint?: string;
+  }) => void;
+
+  // Toast & Confirm
+  showToast: (
+    message: string,
+    type?: 'success' | 'error' | 'warning' | 'info'
+  ) => void;
+  removeToast: (id: string) => void;
+  openConfirm: (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmLabel?: string
+  ) => void;
+  closeConfirm: () => void;
+
+  // Client Management CRUD (Admin Only)
+  addClient: (name: string, colorHex?: string) => ClientRecord | null;
+  updateClient: (
+    id: string,
+    name: string,
+    colorHex?: string
+  ) => ClientRecord | null;
+  deleteClient: (id: string) => void;
+
+  // Operational CRUD
+  saveBunkering: (
+    payload: Omit<BunkeringRecord, 'id' | 'flowRate'> & { id?: string }
+  ) => void;
+  deleteBunkering: (id: string) => void;
+  bulkImportBunkerings: (items: Omit<BunkeringRecord, 'id'>[]) => void;
+
+  saveSounding: (payload: Omit<SoundingRecord, 'id'> & { id?: string }) => void;
+  deleteSounding: (id: string) => void;
+
+  saveTopup: (payload: Omit<TopupRecord, 'id'> & { id?: string }) => void;
+  receiveTopup: (id: string) => void;
+  deleteTopup: (id: string) => void;
+
+  saveForecastDispatch: (
+    payload: Omit<ForecastDispatch, 'id'> & { id?: string }
+  ) => void;
+  deleteForecastDispatch: (id: string) => void;
+
+  saveForecastTopup: (
+    payload: Omit<ForecastTopup, 'id'> & { id?: string }
+  ) => void;
+  deleteForecastTopup: (id: string) => void;
+
+  updateStorageConfig: (updates: Partial<StorageConfig>) => void;
+  restoreFullState: (rawState: Partial<AppOperationalState>) => void;
+  resetAllData: () => void;
+}
+
+export const useAppStore = create<AppStore>((set, get) => ({
+  state: createCleanInitialState(),
+  currentUser: null,
+  activeView: 'dashboardView',
+  forecastHorizonDays: 14,
+  isHydrated: false,
+
+  isClientModalOpen: false,
+  isSwitchUserModalOpen: false,
+  isQuickRobModalOpen: false,
+  isBulkImportModalOpen: false,
+
+  dispatchModal: { isOpen: false, editItem: null },
+  soundingModal: { isOpen: false, editItem: null },
+  topupModal: { isOpen: false, editItem: null, defaultStatus: 'Planned' },
+  docPreviewModal: { isOpen: false, title: '', dataUrl: '' },
+
+  forecastDispatchModal: { isOpen: false, editItem: null },
+  forecastTopupModal: { isOpen: false, editItem: null },
+  floatingChooserModal: { isOpen: false, date: '' },
+  recordManageModal: { isOpen: false, type: 'dispatch', id: '', date: '' },
+
+  toasts: [],
+  confirmDialog: {
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+  },
+
+  hydrate: async () => {
+    if (typeof window === 'undefined') return;
+
+    // 1. Restore session
+    try {
+      const savedSession = sessionStorage.getItem(SESSION_KEY);
+      if (savedSession) {
+        const user = AuthService.getUserByUsername(savedSession);
+        if (user) {
+          set({ currentUser: user });
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2. Restore local state or fetch from backend API
+    let localState: AppOperationalState | null = null;
+    try {
+      const rawLocal = localStorage.getItem(STORAGE_KEY);
+      if (rawLocal) {
+        localState = sanitizeOperationalState(JSON.parse(rawLocal));
+      }
+    } catch {
+      // ignore
+    }
+
+    let serverState: AppOperationalState | null = null;
+    try {
+      const res = await fetch('/api/state');
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.state) {
+          serverState = sanitizeOperationalState(data.state);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    const finalState = localState || serverState || createCleanInitialState();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(finalState));
+      if (localState) {
+        // Keep backend data_store.json synchronized with active state
+        fetch('/api/state', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-role': 'admin',
+          },
+          body: JSON.stringify({ state: finalState }),
+        }).catch(() => {});
+      }
+    } catch {
+      // ignore
+    }
+
+    set({ state: finalState, isHydrated: true });
+  },
+
+  persistState: (nextState: AppOperationalState) => {
+    const clean = sanitizeOperationalState(nextState);
+    set({ state: clean });
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+      } catch {
+        // ignore
+      }
+
+      const username = get().currentUser?.username || 'admin';
+      fetch('/api/state', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': username,
+        },
+        body: JSON.stringify({ state: clean }),
+      }).catch(() => {
+        // non-blocking background API sync
+      });
+    }
+  },
+
+  login: (username: string, password: string) => {
+    const user = AuthService.authenticate(username, password);
+    if (!user) {
+      get().showToast(
+        'Invalid username or password. Please verify your credentials.',
+        'error'
+      );
+      return false;
+    }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(SESSION_KEY, user.username);
+      fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      }).catch(() => {});
+    }
+
+    const currentView = get().activeView;
+    const nextView = user.allowedViews.includes(currentView)
+      ? currentView
+      : 'dashboardView';
+
+    set({
+      currentUser: user,
+      activeView: nextView,
+      isSwitchUserModalOpen: false,
+    });
+    get().showToast(
+      `Welcome, ${user.displayName}. Live sync connected.`,
+      'success'
+    );
+    return true;
+  },
+
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+    set({
+      currentUser: null,
+      activeView: 'dashboardView',
+      isClientModalOpen: false,
+    });
+    get().showToast('You have been logged out.', 'info');
+  },
+
+  setActiveView: (view: ViewId) => {
+    const user = get().currentUser;
+    if (user && !user.allowedViews.includes(view)) {
+      get().showToast(
+        'Access restricted for your user role.',
+        'warning'
+      );
+      return;
+    }
+    set({ activeView: view });
+  },
+
+  setForecastHorizonDays: (days: number) => set({ forecastHorizonDays: days }),
+  setClientModalOpen: (open: boolean) => set({ isClientModalOpen: open }),
+  setSwitchUserModalOpen: (open: boolean) =>
+    set({ isSwitchUserModalOpen: open }),
+  setQuickRobModalOpen: (open: boolean) => set({ isQuickRobModalOpen: open }),
+  setBulkImportModalOpen: (open: boolean) =>
+    set({ isBulkImportModalOpen: open }),
+
+  setDispatchModal: (dispatchModal) => set({ dispatchModal }),
+  setSoundingModal: (soundingModal) => set({ soundingModal }),
+  setTopupModal: (topupModal) => set({ topupModal }),
+  setDocPreviewModal: (docPreviewModal) => set({ docPreviewModal }),
+
+  setForecastDispatchModal: (forecastDispatchModal) =>
+    set({ forecastDispatchModal }),
+  setForecastTopupModal: (forecastTopupModal) => set({ forecastTopupModal }),
+  setFloatingChooserModal: (floatingChooserModal) =>
+    set({ floatingChooserModal }),
+  setRecordManageModal: (recordManageModal) => set({ recordManageModal }),
+
+  showToast: (message, type = 'info') => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    set((s) => ({ toasts: [...s.toasts, { id, message, type }] }));
+    setTimeout(() => {
+      get().removeToast(id);
+    }, 3500);
+  },
+
+  removeToast: (id) => {
+    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+  },
+
+  openConfirm: (title, message, onConfirm, confirmLabel = 'Confirm') => {
+    set({
+      confirmDialog: {
+        isOpen: true,
+        title,
+        message,
+        confirmLabel,
+        onConfirm,
+      },
+    });
+  },
+
+  closeConfirm: () => {
+    set({
+      confirmDialog: {
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null,
+      },
+    });
+  },
+
+  // --- ADMIN CLIENT CRUD ---
+  addClient: (name: string, colorHex?: string) => {
+    const user = get().currentUser;
+    if (!user || !user.canManageClients) {
+      get().showToast(
+        'Administrator privileges are required to add clients.',
+        'error'
+      );
+      return null;
+    }
+
+    try {
+      const { state: nextState, client } = ClientService.addClient(
+        get().state,
+        name,
+        colorHex
+      );
+      get().persistState(nextState);
+      get().showToast(`Client "${client.name}" added successfully.`, 'success');
+      return client;
+    } catch (err: any) {
+      get().showToast(err?.message || 'Failed to add client.', 'error');
+      return null;
+    }
+  },
+
+  updateClient: (id: string, name: string, colorHex?: string) => {
+    const user = get().currentUser;
+    if (!user || !user.canManageClients) {
+      get().showToast(
+        'Administrator privileges are required to edit clients.',
+        'error'
+      );
+      return null;
+    }
+
+    try {
+      const { state: nextState, client } = ClientService.updateClient(
+        get().state,
+        id,
+        name,
+        colorHex
+      );
+      get().persistState(nextState);
+      get().showToast(
+        `Client updated to "${client.name}" across all modules.`,
+        'success'
+      );
+      return client;
+    } catch (err: any) {
+      get().showToast(err?.message || 'Failed to update client.', 'error');
+      return null;
+    }
+  },
+
+  deleteClient: (id: string) => {
+    const user = get().currentUser;
+    if (!user || !user.canManageClients) {
+      get().showToast(
+        'Administrator privileges are required to delete clients.',
+        'error'
+      );
+      return;
+    }
+
+    try {
+      const { state: nextState, deletedClient } = ClientService.deleteClient(
+        get().state,
+        id
+      );
+      get().persistState(nextState);
+      get().showToast(
+        `Client "${deletedClient.name}" has been deleted.`,
+        'info'
+      );
+    } catch (err: any) {
+      get().showToast(err?.message || 'Failed to delete client.', 'error');
+    }
+  },
+
+  // --- OPERATIONAL CRUD ---
+  saveBunkering: (payload) => {
+    if (!get().currentUser?.canEdit) {
+      get().showToast('Permission denied: Read-only access.', 'error');
+      return;
+    }
+    const nextState = InventoryService.saveBunkering(get().state, payload);
+    get().persistState(nextState);
+    get().showToast(
+      payload.id
+        ? 'Bunkering dispatch record updated.'
+        : 'Bunker dispatch record saved successfully.',
+      'success'
+    );
+  },
+
+  deleteBunkering: (id) => {
+    if (!get().currentUser?.canDelete) {
+      get().showToast('Permission denied: Administrator required.', 'error');
+      return;
+    }
+    const nextState = InventoryService.deleteBunkering(get().state, id);
+    get().persistState(nextState);
+    get().showToast('Bunkering dispatch deleted.', 'info');
+  },
+
+  bulkImportBunkerings: (items) => {
+    if (!get().currentUser?.canEdit) return;
+    const newRecords: BunkeringRecord[] = items.map((item, idx) => ({
+      ...item,
+      id: `bnk_imp_${Date.now()}_${idx}`,
+    }));
+    const nextState: AppOperationalState = {
+      ...get().state,
+      bunkerings: [...newRecords, ...get().state.bunkerings],
+    };
+    get().persistState(nextState);
+    get().showToast(
+      `Imported ${newRecords.length} bunkering dispatch records.`,
+      'success'
+    );
+  },
+
+  saveSounding: (payload) => {
+    if (!get().currentUser?.canEdit) return;
+    const nextState = InventoryService.saveSounding(get().state, payload);
+    get().persistState(nextState);
+    get().showToast(
+      payload.id
+        ? 'Physical sounding record updated.'
+        : 'Physical tank sounding recorded successfully.',
+      'success'
+    );
+  },
+
+  deleteSounding: (id) => {
+    if (!get().currentUser?.canDelete) return;
+    const nextState = InventoryService.deleteSounding(get().state, id);
+    get().persistState(nextState);
+    get().showToast('Sounding record deleted.', 'info');
+  },
+
+  saveTopup: (payload) => {
+    if (!get().currentUser?.canEdit) return;
+    const nextState = InventoryService.saveTopup(get().state, payload);
+    get().persistState(nextState);
+    get().showToast(
+      payload.status === 'Completed'
+        ? `Cargo received! +${formatNumber(payload.volume)} L credited to Book ROB.`
+        : payload.id
+        ? 'Inbound cargo top-up voyage updated.'
+        : 'Inbound cargo top-up voyage added.',
+      'success'
+    );
+  },
+
+  receiveTopup: (id) => {
+    if (!get().currentUser?.canEdit) return;
+    const target = get().state.topups.find((t) => t.id === id);
+    const nextState = InventoryService.receiveTopup(get().state, id);
+    get().persistState(nextState);
+    get().showToast(
+      `Cargo received! +${formatNumber(target?.volume || 0)} L credited to Book ROB.`,
+      'success'
+    );
+  },
+
+  deleteTopup: (id) => {
+    if (!get().currentUser?.canDelete) return;
+    const nextState = InventoryService.deleteTopup(get().state, id);
+    get().persistState(nextState);
+    get().showToast('Cargo top-up voyage deleted.', 'info');
+  },
+
+  saveForecastDispatch: (payload) => {
+    if (!get().currentUser?.canEdit) return;
+    const nextState = InventoryService.saveForecastDispatch(
+      get().state,
+      payload
+    );
+    get().persistState(nextState);
+    get().showToast(
+      payload.id
+        ? 'Forecast distribution updated.'
+        : 'Distribution plan saved successfully.',
+      'success'
+    );
+  },
+
+  deleteForecastDispatch: (id) => {
+    if (!get().currentUser?.canDelete) return;
+    const nextState = InventoryService.deleteForecastDispatch(get().state, id);
+    get().persistState(nextState);
+    get().showToast('Forecast distribution removed.', 'info');
+  },
+
+  saveForecastTopup: (payload) => {
+    if (!get().currentUser?.canEdit) return;
+    const nextState = InventoryService.saveForecastTopup(get().state, payload);
+    get().persistState(nextState);
+    get().showToast(
+      payload.id
+        ? 'Forecast top-up plan updated.'
+        : 'Top-Up plan saved successfully.',
+      'success'
+    );
+  },
+
+  deleteForecastTopup: (id) => {
+    if (!get().currentUser?.canDelete) return;
+    const nextState = InventoryService.deleteForecastTopup(get().state, id);
+    get().persistState(nextState);
+    get().showToast('Forecast top-up plan removed.', 'info');
+  },
+
+  updateStorageConfig: (updates) => {
+    if (!get().currentUser?.canEdit) return;
+    const nextState = InventoryService.updateStorageConfig(
+      get().state,
+      updates
+    );
+    get().persistState(nextState);
+    get().showToast(
+      'Storage configuration updated successfully.',
+      'success'
+    );
+  },
+
+  restoreFullState: (rawState) => {
+    if (!get().currentUser?.canManageStorage) return;
+    const clean = sanitizeOperationalState(rawState);
+    get().persistState(clean);
+    get().showToast('Database state restored successfully.', 'success');
+  },
+
+  resetAllData: () => {
+    if (!get().currentUser?.canManageStorage) return;
+    const clean = createCleanInitialState();
+    get().persistState(clean);
+    get().showToast(
+      'All records cleared. System reset to clean starting baseline.',
+      'info'
+    );
+  },
+}));

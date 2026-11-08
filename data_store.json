@@ -1,0 +1,17 @@
+{
+  "storageConfig": {
+    "vesselName": "SPOB TRANS BILGIT",
+    "totalCapacity": 5000000,
+    "deadstock": 0,
+    "initialOpeningRob": 0,
+    "shoreTankName": "SHORE TANK COMBO",
+    "shoreTankInitialRob": 0
+  },
+  "clients": [],
+  "bunkerings": [],
+  "soundings": [],
+  "topups": [],
+  "forecastDispatches": [],
+  "forecastTopups": [],
+  "shoreTankDailyRobs": {}
+}

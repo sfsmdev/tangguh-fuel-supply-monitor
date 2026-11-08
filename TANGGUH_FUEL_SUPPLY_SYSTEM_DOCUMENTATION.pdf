@@ -1,0 +1,503 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [ 8 0 R 10 0 R 12 0 R 14 0 R 16 0 R ] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>
+endobj
+7 0 obj
+<< /Length 9471 >>
+stream
+q 0.050 0.290 0.430 rg 0.00 807.89 595.28 34.00 re f Q
+q BT /F2 8.50 Tf 1.000 1.000 1.000 rg 42.00 819.89 Td (TANGGUH FUEL SUPPLY MONITORING SYSTEM - TECHNICAL & FUNCTIONAL REFERENCE) Tj ET Q
+q BT /F3 7.50 Tf 0.750 0.900 1.000 rg 468.28 819.89 Td (WIT \(UTC+9\) STANDARD) Tj ET Q
+q 0.060 0.150 0.260 rg 0.020 0.520 0.780 RG 1.20 w 42.00 713.89 511.28 74.00 re B Q
+q BT /F2 14.00 Tf 1.000 1.000 1.000 rg 58.00 763.89 Td (TANGGUH FUEL SUPPLY MONITORING SYSTEM) Tj ET Q
+q BT /F1 9.20 Tf 0.750 0.900 1.000 rg 58.00 745.89 Td (Dokumentasi Lengkap Arsitektur Sistem, Rumus Perhitungan Matematis, dan Fungsi Operasional) Tj ET Q
+q BT /F3 7.20 Tf 0.550 0.820 0.960 rg 58.00 727.89 Td (Stack: Next.js App Router \(frontend / backend / api\) | Dual Storage: SPOB TRANS BILGIT & SHORE TANK COMBO) Tj ET Q
+q 0.930 0.960 0.990 rg 0.750 0.850 0.950 RG 0.80 w 42.00 669.89 511.28 22.00 re B Q
+q 0.010 0.450 0.700 rg 42.00 669.89 5.00 22.00 re f Q
+q BT /F2 10.20 Tf 0.050 0.250 0.420 rg 54.00 676.39 Td (1. GAMBARAN UMUM & ARSITEKTUR SISTEM \(SYSTEM OVERVIEW\)) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 650.89 Td (Tangguh Fuel Supply Monitoring System adalah platform web enterprise berbasis Next.js dan TypeScript yang) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 637.89 Td (dirancang untuk memantau rantai pasok bahan bakar industri & maritim \(B50 / Marine HSD\) secara real-time di) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 624.89 Td (wilayah operasional Tangguh LNG \(Teluk Bintuni, Papua Barat\). Seluruh pencatatan waktu, log distribusi, dan) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 611.89 Td (proyeksi stok menggunakan standar Waktu Indonesia Timur \(WIT / UTC+9\).) Tj ET Q
+q BT /F2 9.50 Tf 0.070 0.320 0.520 rg 42.00 594.89 Td (1.1 Fasilitas Penyimpanan Ganda \(Dual-Storage Facility\)) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 579.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 579.89 Td (1. Floating Storage \(SPOB TRANS BILGIT\): Kapal penyimpanan terapung utama di lepas pantai dengan) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 567.39 Td (kapasitas nominal default 5.000.000 Liter. Melayani distribusi bahan bakar harian \(Bunkering Dispatch\) ke) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 554.89 Td (kapal-kapal kontraktor dan armada konstruksi lepas pantai.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 540.39 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 540.39 Td (2. Onshore Storage \(SHORE TANK COMBO\): Fasilitas tangki timbun darat yang dikelola menggunakan proyeksi) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 527.89 Td (saldo berjalan kumulatif \(Cumulative Carry-Over Running Balance\).) Tj ET Q
+q BT /F2 9.50 Tf 0.070 0.320 0.520 rg 42.00 512.39 Td (1.2 Struktur Folder Modular 3-Layer \(Scalable Monorepo\)) Tj ET Q
+q 0.100 0.220 0.360 rg 0.100 0.220 0.360 RG 0.70 w 42.00 487.39 511.00 19.00 re B Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 47.00 493.39 Td (Layer / Folder) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 152.00 493.39 Td (File Utama) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 282.00 493.39 Td (Fungsi & Tanggung Jawab Arsitektural Lengkap) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 458.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 475.89 Td (backend/src/models) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 475.89 Td (Client.ts, Inventory.ts,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 464.89 Td (StorageConfig.ts, User.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 475.89 Td (Mendefinisikan kontrak tipe data TypeScript, skema inventori,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 464.89 Td (konfigurasi tangki, dan 7 akun RBAC.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 429.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 446.89 Td (backend/src/services) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 446.89 Td (CalculationEngine.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 446.89 Td (Mesin perhitungan matematis utama: Book ROB, Flow Rate \(L/Hr\),) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 435.89 Td (Physical Variance, dan waktu WIT \(UTC+9\).) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 400.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 417.89 Td (backend/src/services) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 417.89 Td (ClientService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 417.89 Td (Layanan CRUD Client Master \(Add, Edit in-place dengan cascade) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 406.89 Td (rename ke seluruh riwayat & forecast, Delete\).) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 371.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 388.89 Td (backend/src/services) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 388.89 Td (ForecastService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 388.89 Td (Mesin simulasi matriks proyeksi SPOB TRANS BILGIT, Shore Tank) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 377.89 Td (Combo, dan kalkulasi 5 horizon DLAH.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 342.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 359.89 Td (backend/src/services) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 359.89 Td (InventoryService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 359.89 Td (Layanan transaksi CRUD untuk log Bunkering Dispatch, Physical) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 348.89 Td (Sounding, Cargo Top-Up, dan Storage Config.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 313.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 330.89 Td (backend/src/db) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 330.89 Td (seed.ts, DatabaseAdapter.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 330.89 Td (Inisialisasi state awal bersih \(clients: [] tanpa hardcode\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 319.89 Td (serta penyimpanan persisten JSON server.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 284.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 301.89 Td (api/src/middlewares) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 301.89 Td (rbac.middleware.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 301.89 Td (Middleware validasi hak akses per-role \(requireAdmin,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 290.89 Td (requireEdit, requireDelete\) pada setiap request API.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 244.39 511.00 40.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 272.89 Td (api/src/controllers) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 272.89 Td (auth.controller.ts,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 261.89 Td (clients.controller.ts,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 250.89 Td (state.controller.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 272.89 Td (Controller endpoint REST API untuk autentikasi sesi, manajemen) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 261.89 Td (klien, dan sinkronisasi state.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 215.39 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 232.89 Td (frontend/src/store) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 232.89 Td (useAppStore.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 232.89 Td (Centralized state management menggunakan Zustand dengan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 221.89 Td (sinkronisasi otomatis ke LocalStorage dan REST API.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 175.39 511.00 40.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 203.89 Td (frontend/src/components) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 203.89 Td (dashboard/, forecast/,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 192.89 Td (dispatch/, sounding/,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 181.89 Td (topup/, clients/) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 203.89 Td (Komponen UI reaktif Next.js, grafik Chart.js, Hull Visualizer,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 282.00 192.89 Td (Forecast Matrix, dan Modal CRUD.) Tj ET Q
+q 0.930 0.960 0.990 rg 0.750 0.850 0.950 RG 0.80 w 42.00 137.39 511.28 22.00 re B Q
+q 0.010 0.450 0.700 rg 42.00 137.39 5.00 22.00 re f Q
+q BT /F2 10.20 Tf 0.050 0.250 0.420 rg 54.00 143.89 Td (2. PENJELASAN LENGKAP SELURUH RUMUS MATEMATIKA & INVENTORI) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 118.39 Td (Seluruh perhitungan di dalam aplikasi dijalankan secara terpusat melalui CalculationEngine.ts dan) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 105.39 Td (ForecastService.ts agar angka yang tampil pada Dashboard, Sidebar, Tabel Rekonsiliasi, Grafik, hingga file) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 92.39 Td (Excel/PDF selalu identik.) Tj ET Q
+q 0.820 0.850 0.890 RG 0.70 w 42.00 36.00 m 553.28 36.00 l S Q
+q BT /F1 7.50 Tf 0.400 0.450 0.520 rg 42.00 23.00 Td (Tangguh Fuel Supply Monitor | System Architecture, Mathematical Formulas & Functional Guide) Tj ET Q
+q BT /F2 8.00 Tf 0.150 0.250 0.350 rg 508.28 23.00 Td (Page 1) Tj ET Q
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents 7 0 R >>
+endobj
+9 0 obj
+<< /Length 7182 >>
+stream
+q 0.050 0.290 0.430 rg 0.00 807.89 595.28 34.00 re f Q
+q BT /F2 8.50 Tf 1.000 1.000 1.000 rg 42.00 819.89 Td (TANGGUH FUEL SUPPLY MONITORING SYSTEM - TECHNICAL & FUNCTIONAL REFERENCE) Tj ET Q
+q BT /F3 7.50 Tf 0.750 0.900 1.000 rg 468.28 819.89 Td (WIT \(UTC+9\) STANDARD) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 693.89 511.28 94.00 re B Q
+q 0.020 0.520 0.780 rg 42.00 693.89 3.50 94.00 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 773.89 Td (RUMUS 1: Total Cargo Top-Up Received \(Suplai Masuk Aktif\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 758.89 Td (Total_TopUp \(L\) = SUM\( Volume_i \)   dimana Status_i == 'Completed') Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 743.39 Td (Hanya perjalanan kapal tanker suplai \(Inbound Voyage\) yang berstatus 'Completed' yang) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 731.89 Td (dijumlahkan ke dalam stok buku \(Book ROB\). Voyage dengan status 'Planned', 'Loading', 'In) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 720.39 Td (Transit', atau 'Discharging' disimpan sebagai jadwal rencana tanpa mengubah stok fisik saat) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 708.89 Td (ini.) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 589.39 511.28 96.50 re B Q
+q 0.020 0.520 0.780 rg 42.00 589.39 3.50 96.50 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 671.89 Td (RUMUS 2: Total & Daily Bunker Dispatched \(Total Distribusi Keluar\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 656.89 Td (Total_Dispatched \(L\) = SUM\( Bunkering_Volume_i \)   untuk seluruh log) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 643.39 Td (Today_Dispatched \(L\) = SUM\( Bunkering_Volume_i \)   dimana Date_i == Tanggal_WIT_Hari_Ini) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 627.89 Td (Menghitung akumulasi seluruh bahan bakar yang telah dipompakan dari SPOB TRANS BILGIT ke) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 616.39 Td (kapal penerima milik klien, serta memisahkan volume penyaluran khusus pada hari berjalan) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 604.89 Td (sesuai zona waktu WIT \(UTC+9\).) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 498.89 511.28 82.50 re B Q
+q 0.020 0.520 0.780 rg 42.00 498.89 3.50 82.50 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 567.39 Td (RUMUS 3: Live Book ROB \(Remaining On Board - Saldo Buku Real-Time\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 552.39 Td (Book_ROB \(L\) = \( Initial_Opening_ROB + Total_TopUp \) - Total_Dispatched) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 536.89 Td (Merupakan angka stok bahan bakar teoretis \(administratif\) yang tersisa di kapal penyimpanan) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 525.39 Td (SPOB TRANS BILGIT. Nilai Book_ROB ini juga menjadi nilai saldo awal otomatis \(Opening ROB\)) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 513.89 Td (pada simulasi tabel Forecast.) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 408.39 511.28 82.50 re B Q
+q 0.020 0.520 0.780 rg 42.00 408.39 3.50 82.50 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 476.89 Td (RUMUS 4: Physical Sounding Variance Reconciliation \(Selisih Fisik vs Buku\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 461.89 Td (Variance \(L\) = Latest_Physical_Sounding \(L\) - Book_ROB \(L\)) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 446.39 Td (Membandingkan hasil pengukuran sounding fisik terbaru oleh Chief Officer terhadap saldo buku) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 434.89 Td (\(Book ROB\). Jika Variance >= 0 maka ditandai hijau \(+Surplus/Gain\); jika Variance < 0 maka) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 423.39 Td (ditandai merah \(-Defisit/Loss\).) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 301.39 511.28 99.00 re B Q
+q 0.020 0.520 0.780 rg 42.00 301.39 3.50 99.00 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 386.39 Td (RUMUS 5: Usable Pumpable Stock & Persentase Visualisasi Hull Kapal) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 371.39 Td (Usable_ROB \(L\)      = max\( 0,  Book_ROB - Deadstock \)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 357.89 Td (Hull_Fill_Pct \(%\)   = min\( 100,  max\( 0,  \(Book_ROB / Total_Capacity\) * 100 \) \)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 344.39 Td (Deadstock_Pct \(%\)   = min\( 100,  max\( 0,  \(Deadstock / Total_Capacity\) * 100 \) \)) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 328.89 Td (Deadstock adalah batas volume dasar tangki yang tidak dapat dipompa keluar. Usable ROB) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 317.39 Td (menunjukkan volume bahan bakar bersih yang benar-benar siap didistribusikan ke kapal klien.) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 180.39 511.28 113.00 re B Q
+q 0.020 0.520 0.780 rg 42.00 180.39 3.50 113.00 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 279.39 Td (RUMUS 6: Pumping Flow Rate \(Kecepatan Aliran Transfer Bunkering per Jam\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 264.39 Td (Duration_Minutes    = \(End_Hour * 60 + End_Min\) - \(Start_Hour * 60 + Start_Min\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 250.89 Td (Jika Duration_Minutes <= 0:  Duration_Minutes = Duration_Minutes + 1440  \(Lintas Tengah Malam\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 237.39 Td (Duration_Hours      = Duration_Minutes / 60) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 223.89 Td (Flow_Rate \(L/Hr\)    = round\( Volume_Dispatched / Duration_Hours \)) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 208.39 Td (Menghitung kecepatan rata-rata pompa saat proses bunkering berlangsung dalam satuan Liter) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 196.89 Td (per Jam \(L/Hr\). Menangani operasi pemompaan yang melewati pukul 00:00 WIT secara otomatis.) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 75.89 511.28 96.50 re B Q
+q 0.020 0.520 0.780 rg 42.00 75.89 3.50 96.50 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 158.39 Td (RUMUS 7: Distribusi & Persentase Pangsa per Klien \(Client Share %\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 143.39 Td (Client_Total[c] \(L\) = SUM\( Volume_i \)   dimana Contractor_i == Nama_Klien[c]) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 129.89 Td (Client_Share[c] \(%\) = \( Client_Total[c] / Total_Dispatched \) * 100%) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 114.39 Td (Dihitung secara dinamis untuk setiap klien yang terdaftar di dalam Client Master List.) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 102.89 Td (Ditampilkan pada Sidebar, Doughnut Chart Dashboard, Tabel Legenda, serta laporan cetak PDF) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 91.39 Td (dan Excel.) Tj ET Q
+q 0.820 0.850 0.890 RG 0.70 w 42.00 36.00 m 553.28 36.00 l S Q
+q BT /F1 7.50 Tf 0.400 0.450 0.520 rg 42.00 23.00 Td (Tangguh Fuel Supply Monitor | System Architecture, Mathematical Formulas & Functional Guide) Tj ET Q
+q BT /F2 8.00 Tf 0.150 0.250 0.350 rg 508.28 23.00 Td (Page 2) Tj ET Q
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents 9 0 R >>
+endobj
+11 0 obj
+<< /Length 8752 >>
+stream
+q 0.050 0.290 0.430 rg 0.00 807.89 595.28 34.00 re f Q
+q BT /F2 8.50 Tf 1.000 1.000 1.000 rg 42.00 819.89 Td (TANGGUH FUEL SUPPLY MONITORING SYSTEM - TECHNICAL & FUNCTIONAL REFERENCE) Tj ET Q
+q BT /F3 7.50 Tf 0.750 0.900 1.000 rg 468.28 819.89 Td (WIT \(UTC+9\) STANDARD) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 677.39 511.28 110.50 re B Q
+q 0.020 0.520 0.780 rg 42.00 677.39 3.50 110.50 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 773.89 Td (RUMUS 8: Proyeksi Matriks Harian Floating Storage \(SPOB TRANS BILGIT\) & Safety Alert) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 758.89 Td (Opening_ROB \(Hari 1\) = max\( 0,  Book_ROB_Saat_Ini \)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 745.39 Td (Projected_ROB[t]     = Projected_ROB[t-1] + Floating_TopUp[t] - SUM\( Client_Dispatch[c, t] \)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 731.89 Td (Status Indikator     : WARNING jika Projected_ROB[t] <= 300,000 L  |  SAFE jika > 300,000 L) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 716.39 Td (Setiap hari ke-t pada horizon forecast \(10/14/30/60/90 hari\), saldo akhir dihitung dari) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 704.89 Td (saldo hari sebelumnya ditambah rencana Top-Up Floating Storage dikurangi total rencana) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 693.39 Td (distribusi seluruh klien pada tanggal tersebut.) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 586.89 511.28 82.50 re B Q
+q 0.020 0.520 0.780 rg 42.00 586.89 3.50 82.50 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 655.39 Td (RUMUS 9: Multi-Horizon DLAH \(Days Look-Ahead Horizon: 10, 14, 30, 60, 90 Hari\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 640.39 Td (DLAH_ROB\(H\) = Live_Book_ROB + SUM_{hari d = 0 .. H-1} \( Floating_TopUp[d] - Client_Dispatch[d] \)) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 624.89 Td (Mengevaluasi proyeksi stok akhir pada 5 titik horizon sekaligus \(10, 14, 30, 60, dan 90 hari) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 613.39 Td (ke depan\) dan memberikan peringatan dini \(Warning <= 300k L\) apabila stok diproyeksikan) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 601.89 Td (turun melewati batas aman.) Tj ET Q
+q 0.970 0.980 1.000 rg 0.780 0.840 0.920 RG 0.80 w 42.00 493.89 511.28 85.00 re B Q
+q 0.020 0.520 0.780 rg 42.00 493.89 3.50 85.00 re f Q
+q BT /F2 9.20 Tf 0.050 0.280 0.480 rg 54.00 564.89 Td (RUMUS 10: Proyeksi Saldo Berjalan Onshore Tank \(SHORE TANK COMBO\)) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 549.89 Td (Shore_Running_ROB[0] = Shore_Tank_Initial_Base_ROB) Tj ET Q
+q BT /F4 8.50 Tf 0.080 0.120 0.220 rg 58.00 536.39 Td (Shore_Running_ROB[t] = Shore_Running_ROB[t-1] + Shore_TopUp[t]) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 520.89 Td (Menghitung akumulasi saldo berjalan \(Cumulative Carry-Over Running Balance\) pada fasilitas) Tj ET Q
+q BT /F1 8.30 Tf 0.300 0.360 0.440 rg 54.00 509.39 Td (tangki darat dalam satuan Liter \(L\).) Tj ET Q
+q 0.930 0.960 0.990 rg 0.750 0.850 0.950 RG 0.80 w 42.00 457.89 511.28 22.00 re B Q
+q 0.010 0.450 0.700 rg 42.00 457.89 5.00 22.00 re f Q
+q BT /F2 10.20 Tf 0.050 0.250 0.420 rg 54.00 464.39 Td (3. SISTEM MANAJEMEN KLIEN DINAMIS TERPUSAT \(ADMIN CLIENT CRUD\)) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 438.89 Td (Sesuai spesifikasi terbaru, seluruh nama kontraktor bawaan \(seperti JGC, SAIPEM, PETROSEA\) telah dihapus dari) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 425.89 Td (data master default dan digantikan dengan sistem Client Management dinamis yang dikendalikan penuh oleh Admin.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 409.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 409.89 Td (1. Reset Existing Client Records: State awal aplikasi menggunakan array kosong \(clients: []\). Tidak ada) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 397.39 Td (nama klien yang di-hardcode di dalam tabel maupun dropdown.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 382.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 382.89 Td (2. Add Client \(Tambah Klien Baru\): Admin dapat menambahkan nama klien baru beserta warna badge identitas) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 370.39 Td (melalui modal 'Manage Clients'. Sistem menolak input kosong atau duplikat.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 355.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 355.89 Td (3. Edit Client In-Place \(Ubah Nama Klien & Sinkronisasi Otomatis\): Admin dapat mengubah nama klien secara) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 343.39 Td (langsung \(in-place\). Saat nama klien diubah, fungsi ClientService.updateClient\(\) otomatis memperbarui) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 330.89 Td (seluruh riwayat Bunkering Dispatch dan jadwal Forecast Distribution yang terkait agar integritas data) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 318.39 Td (tetap terjaga.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 303.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 303.89 Td (4. Delete Client \(Hapus Klien dengan Konfirmasi\): Menghapus klien dari daftar master setelah Admin) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 291.39 Td (menyetujui dialog konfirmasi keamanan, sekaligus membersihkan baris klien tersebut dari matriks forecast.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 276.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 276.89 Td (5. Global Single Source of Truth & Empty-State UI: Daftar klien otomatis membentuk baris vertikal pada) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 264.39 Td (tabel Forecast SPOB TRANS BILGIT, mengisi seluruh dropdown pemilihan klien, dan memperbarui grafik) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 251.89 Td (dashboard. Saat belum ada klien \(0 klien\), tampil pesan standar: "No clients available. Click 'Add) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 239.39 Td (Client' to create one.") Tj ET Q
+q 0.930 0.960 0.990 rg 0.750 0.850 0.950 RG 0.80 w 42.00 205.89 511.28 22.00 re B Q
+q 0.010 0.450 0.700 rg 42.00 205.89 5.00 22.00 re f Q
+q BT /F2 10.20 Tf 0.050 0.250 0.420 rg 54.00 212.39 Td (4. DAFTAR MODUL, KOMPONEN UI & FUNGSI KODE APLIKASI) Tj ET Q
+q BT /F2 9.50 Tf 0.070 0.320 0.520 rg 42.00 185.89 Td (4.1 Daftar Modul Antarmuka \(Frontend Modules\)) Tj ET Q
+q 0.100 0.220 0.360 rg 0.100 0.220 0.360 RG 0.70 w 42.00 160.89 511.00 19.00 re B Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 47.00 166.89 Td (Nama Modul / View) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 152.00 166.89 Td (Komponen File) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 267.00 166.89 Td (Rincian Fungsi & Fitur Utama Lengkap) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 131.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 149.39 Td (1. Login & Auth Portal) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 149.39 Td (LoginScreen.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 149.39 Td (Autentikasi pengguna, jam WIT live \(UTC+9\), dan fitur Quick-Fill) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 138.39 Td (untuk 7 akun RBAC.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 102.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 120.39 Td (2. Top Header &) Tj ET Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 109.39 Td (Sidebar) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 120.39 Td (TopHeader.tsx,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 109.39 Td (Sidebar.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 120.39 Td (Navigasi antar modul, indikator Book ROB live, tombol Manage) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 109.39 Td (Clients, dan ringkasan volume per klien.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 73.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 91.39 Td (3. Monitoring) Tj ET Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 80.39 Td (Dashboard) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 91.39 Td (DashboardView.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 91.39 Td (Menampilkan 4 KPI Cards utama serta tombol aksi cepat \(Log Top-Up,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 80.39 Td (Log Dispatch, Opening ROB, Export PDF\).) Tj ET Q
+q 0.820 0.850 0.890 RG 0.70 w 42.00 36.00 m 553.28 36.00 l S Q
+q BT /F1 7.50 Tf 0.400 0.450 0.520 rg 42.00 23.00 Td (Tangguh Fuel Supply Monitor | System Architecture, Mathematical Formulas & Functional Guide) Tj ET Q
+q BT /F2 8.00 Tf 0.150 0.250 0.350 rg 508.28 23.00 Td (Page 3) Tj ET Q
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents 11 0 R >>
+endobj
+13 0 obj
+<< /Length 12247 >>
+stream
+q 0.050 0.290 0.430 rg 0.00 807.89 595.28 34.00 re f Q
+q BT /F2 8.50 Tf 1.000 1.000 1.000 rg 42.00 819.89 Td (TANGGUH FUEL SUPPLY MONITORING SYSTEM - TECHNICAL & FUNCTIONAL REFERENCE) Tj ET Q
+q BT /F3 7.50 Tf 0.750 0.900 1.000 rg 468.28 819.89 Td (WIT \(UTC+9\) STANDARD) Tj ET Q
+q 0.100 0.220 0.360 rg 0.100 0.220 0.360 RG 0.70 w 42.00 768.89 511.00 19.00 re B Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 47.00 774.89 Td (Nama Modul / View) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 152.00 774.89 Td (Komponen File) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 267.00 774.89 Td (Rincian Fungsi & Fitur Utama Lengkap) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 739.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 757.39 Td (4. Ship Hull) Tj ET Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 746.39 Td (Visualizer) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 757.39 Td (HullVisualizer.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 757.39 Td (Visualisasi grafik penampang melintang kapal SPOB TRANS BILGIT,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 746.39 Td (persentase tinggi cairan, deadstock, dan draft Fwd/Aft.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 710.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 728.39 Td (5. Dashboard Analytics) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 728.39 Td (DashboardCharts.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 728.39 Td (Menampilkan Doughnut Chart pangsa distribusi klien dinamis & Bar) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 717.39 Td (Chart tren penyaluran harian selama 14 hari terakhir.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 681.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 699.39 Td (6. Forecast & DLAH) Tj ET Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 688.39 Td (Plan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 699.39 Td (ForecastView.tsx,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 688.39 Td (ForecastCharts.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 699.39 Td (Simulasi horizon 10/14/30/60/90 hari, 5 kartu status DLAH, tabel) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 688.39 Td (matriks interaktif SPOB TRANS BILGIT & Shore Tank.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 652.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 670.39 Td (7. Daily Bunker) Tj ET Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 659.39 Td (Dispatch) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 670.39 Td (DispatchView.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 670.39 Td (Tabel log penyaluran BBM, kalkulator otomatis Flow Rate \(L/Hr\),) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 659.39 Td (pencarian kapal, filter klien, dan Bulk Import Excel \(.xlsx\).) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 623.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 641.39 Td (8. Physical Sounding) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 641.39 Td (SoundingView.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 641.39 Td (Pencatatan sounding fisik \(L\), pembacaan draft kapal Fwd/Aft \(m\),) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 630.39 Td (upload lampiran PDF/Foto Sounding Sheet, dan varians.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 594.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 612.39 Td (9. Cargo Top-Up Plan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 612.39 Td (TopupView.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 612.39 Td (Manajemen jadwal kapal tanker suplai \(ETD, ETA, ATD, ATA\),) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 601.39 Td (pelabuhan muat/bongkar, dan status Completed.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 565.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 583.39 Td (10. Storage & Config) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 583.39 Td (SettingsView.tsx) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 583.39 Td (Pengaturan nama kapal, kapasitas total, deadstock, fitur) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 572.39 Td (Backup/Restore file JSON, serta tombol Reset Database.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 536.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 554.39 Td (11. Export Engine) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 152.00 554.39 Td (exportUtils.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 554.39 Td (Fungsi exportFullReportToExcel\(\) \(5 worksheet .xlsx\) dan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 267.00 543.39 Td (printExecutivePdfReport\(\) \(dokumen pernyataan resmi siap cetak\).) Tj ET Q
+q BT /F2 9.50 Tf 0.070 0.320 0.520 rg 42.00 516.89 Td (4.2 Referensi Fungsi Inti Backend & Store \(Core Functions Reference\)) Tj ET Q
+q 0.100 0.220 0.360 rg 0.100 0.220 0.360 RG 0.70 w 42.00 491.89 511.00 19.00 re B Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 47.00 497.89 Td (Nama Fungsi / Method) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 182.00 497.89 Td (Lokasi File) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 287.00 497.89 Td (Input Parameter & Output yang Dihasilkan) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 451.89 511.00 40.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 480.39 Td (calculateSummary\(state\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 480.39 Td (CalculationEngine.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 480.39 Td (Input: AppOperationalState. Output: initialRob, totalTopup,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 469.39 Td (totalDispatched, todayDispatched, bookRob, latestSounding,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 458.39 Td (variance, clientTotals.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 422.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 440.39 Td (calculateFlowRate\(vol, start,) Tj ET Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 429.39 Td (end\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 440.39 Td (CalculationEngine.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 440.39 Td (Input: volume \(L\), startTime \(HH:mm\), endTime \(HH:mm\). Output:) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 429.39 Td (kecepatan aliran pompa dalam Liter/Jam \(L/Hr\).) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 382.89 511.00 40.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 411.39 Td (simulateForecast\(state, days\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 411.39 Td (ForecastService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 411.39 Td (Input: state & horizonDays \(10-90\). Output: floatingTimeline) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 400.39 Td (\(baris klien dinamis & Projected ROB\), shoreTimeline, dan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 389.39 Td (dlahMetrics.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 353.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 371.39 Td (ClientService.addClient\(\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 371.39 Td (ClientService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 371.39 Td (Input: state, name, colorHex. Validasi duplikat & menambahkan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 360.39 Td (objek ClientRecord baru ke daftar master.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 324.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 342.39 Td (ClientService.updateClient\(\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 342.39 Td (ClientService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 342.39 Td (Input: state, clientId, newName, colorHex. Mengubah nama klien) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 331.39 Td (& meng-update seluruh bunkering/forecast terkait.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 295.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 313.39 Td (ClientService.deleteClient\(\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 313.39 Td (ClientService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 313.39 Td (Input: state, clientId. Menghapus klien dari daftar master) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 302.39 Td (serta membersihkan jadwal forecast milik klien tersebut.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 266.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 284.39 Td (InventoryService.saveBunkering\(\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 284.39 Td (InventoryService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 284.39 Td (Menyimpan atau memperbarui transaksi distribusi BBM harian dan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 273.39 Td (menghitung ulang nilai flowRate secara otomatis.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 237.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 255.39 Td (InventoryService.saveSounding\(\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 255.39 Td (InventoryService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 255.39 Td (Menyimpan hasil pengukuran sounding fisik \(L\), draft Fwd/Aft,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 244.39 Td (serta dokumen lampiran Chief Officer Sounding Sheet.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 208.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 226.39 Td (InventoryService.saveTopup\(\)) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 182.00 226.39 Td (InventoryService.ts) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 226.39 Td (Menyimpan jadwal kedatangan kapal suplai. Jika status diset) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 287.00 215.39 Td ('Completed', volumenya otomatis menambah Book ROB.) Tj ET Q
+q 0.930 0.960 0.990 rg 0.750 0.850 0.950 RG 0.80 w 42.00 170.89 511.28 22.00 re B Q
+q 0.010 0.450 0.700 rg 42.00 170.89 5.00 22.00 re f Q
+q BT /F2 10.20 Tf 0.050 0.250 0.420 rg 54.00 177.39 Td (5. MATRIKS ROLE-BASED ACCESS CONTROL \(7 ENTITAS RBAC\)) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 151.89 Td (Aplikasi menerapkan kontrol akses berbasis peran \(RBAC\) baik pada sisi antarmuka \(UI permission gating\) maupun) Tj ET Q
+q BT /F1 9.00 Tf 0.150 0.200 0.280 rg 42.00 138.89 Td (pada layer API Middleware \(rbac.middleware.ts\) sesuai spesifikasi berikut:) Tj ET Q
+q 0.100 0.220 0.360 rg 0.100 0.220 0.360 RG 0.70 w 42.00 112.89 511.00 19.00 re B Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 47.00 118.89 Td (No) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 71.00 118.89 Td (Role / Entitas) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 143.00 118.89 Td (Username) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 211.00 118.89 Td (Password) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 279.00 118.89 Td (Tingkat Akses & Wewenang Lengkap \(RBAC\)) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 72.89 511.00 40.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 101.39 Td (1) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 101.39 Td (Admin) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 101.39 Td (admin) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 101.39 Td (admin123) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 101.39 Td (Full Access: Akses seluruh menu, CRUD Client Master,) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 90.39 Td (tambah/edit/hapus data, konfigurasi floating storage & reset) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 79.39 Td (database.) Tj ET Q
+q 0.820 0.850 0.890 RG 0.70 w 42.00 36.00 m 553.28 36.00 l S Q
+q BT /F1 7.50 Tf 0.400 0.450 0.520 rg 42.00 23.00 Td (Tangguh Fuel Supply Monitor | System Architecture, Mathematical Formulas & Functional Guide) Tj ET Q
+q BT /F2 8.00 Tf 0.150 0.250 0.350 rg 508.28 23.00 Td (Page 4) Tj ET Q
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents 13 0 R >>
+endobj
+15 0 obj
+<< /Length 5701 >>
+stream
+q 0.050 0.290 0.430 rg 0.00 807.89 595.28 34.00 re f Q
+q BT /F2 8.50 Tf 1.000 1.000 1.000 rg 42.00 819.89 Td (TANGGUH FUEL SUPPLY MONITORING SYSTEM - TECHNICAL & FUNCTIONAL REFERENCE) Tj ET Q
+q BT /F3 7.50 Tf 0.750 0.900 1.000 rg 468.28 819.89 Td (WIT \(UTC+9\) STANDARD) Tj ET Q
+q 0.100 0.220 0.360 rg 0.100 0.220 0.360 RG 0.70 w 42.00 768.89 511.00 19.00 re B Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 47.00 774.89 Td (No) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 71.00 774.89 Td (Role / Entitas) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 143.00 774.89 Td (Username) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 211.00 774.89 Td (Password) Tj ET Q
+q BT /F2 8.00 Tf 1.000 1.000 1.000 rg 279.00 774.89 Td (Tingkat Akses & Wewenang Lengkap \(RBAC\)) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 739.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 757.39 Td (2) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 757.39 Td (Management) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 757.39 Td (management) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 757.39 Td (manage2026) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 757.39 Td (View-Only: Dapat melihat seluruh menu dashboard, forecast, dan) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 746.39 Td (log monitoring tanpa izin tambah/edit/hapus data.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 710.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 728.39 Td (3) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 728.39 Td (Staff) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 728.39 Td (staff) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 728.39 Td (staff2026) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 728.39 Td (Operational: Dapat menginput dan mengedit data operasional) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 717.39 Td (harian; tombol hapus \(Delete\) dan reset database dinonaktifkan.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 681.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 699.39 Td (4) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 699.39 Td (JGC) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 699.39 Td (jgc) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 699.39 Td (jgc2026) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 699.39 Td (View-Only \(Contractor\): Akses khusus pemantauan pada Monitoring) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 688.39 Td (Dashboard, Forecast Matrix, Physical Sounding, & Cargo Plan.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 652.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 670.39 Td (5) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 670.39 Td (SAIPEM) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 670.39 Td (saipem) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 670.39 Td (sai2026) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 670.39 Td (View-Only \(Contractor\): Akses khusus pemantauan pada Monitoring) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 659.39 Td (Dashboard, Forecast Matrix, Physical Sounding, & Cargo Plan.) Tj ET Q
+q 0.980 0.990 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 623.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 641.39 Td (6) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 641.39 Td (PETROSEA) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 641.39 Td (ptp) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 641.39 Td (ptp2026) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 641.39 Td (View-Only \(Contractor\): Akses khusus pemantauan pada Monitoring) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 630.39 Td (Dashboard, Forecast Matrix, Physical Sounding, & Cargo Plan.) Tj ET Q
+q 1.000 1.000 1.000 rg 0.840 0.870 0.910 RG 0.50 w 42.00 594.89 511.00 29.00 re B Q
+q BT /F2 7.80 Tf 0.120 0.160 0.240 rg 47.00 612.39 Td (7) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 71.00 612.39 Td (BP Tangguh) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 143.00 612.39 Td (bptangguh) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 211.00 612.39 Td (bp2026) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 612.39 Td (View-Only \(Owner/Client\): Akses pengawasan pemilik proyek pada) Tj ET Q
+q BT /F1 7.80 Tf 0.120 0.160 0.240 rg 279.00 601.39 Td (Monitoring Dashboard, Forecast Matrix, Sounding, & Cargo Plan.) Tj ET Q
+q 0.930 0.960 0.990 rg 0.750 0.850 0.950 RG 0.80 w 42.00 556.89 511.28 22.00 re B Q
+q 0.010 0.450 0.700 rg 42.00 556.89 5.00 22.00 re f Q
+q BT /F2 10.20 Tf 0.050 0.250 0.420 rg 54.00 563.39 Td (6. PANDUAN MENJALANKAN APLIKASI \(DEPLOYMENT & EXECUTION\)) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 537.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 537.89 Td (Development Server: Jalankan perintah 'npm run dev' pada root folder proyek, kemudian buka) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 525.39 Td (http://localhost:3000 di browser.) Tj ET Q
+q BT /F2 9.00 Tf 0.020 0.520 0.780 rg 50.00 510.89 Td (-) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 510.89 Td (Production Build: Jalankan perintah 'npm run build' dilanjutkan dengan 'npm start' untuk menjalankan) Tj ET Q
+q BT /F1 8.80 Tf 0.150 0.200 0.280 rg 60.00 498.39 Td (server produksi yang telah dioptimasi.) Tj ET Q
+q 0.820 0.850 0.890 RG 0.70 w 42.00 36.00 m 553.28 36.00 l S Q
+q BT /F1 7.50 Tf 0.400 0.450 0.520 rg 42.00 23.00 Td (Tangguh Fuel Supply Monitor | System Architecture, Mathematical Formulas & Functional Guide) Tj ET Q
+q BT /F2 8.00 Tf 0.150 0.250 0.350 rg 508.28 23.00 Td (Page 5) Tj ET Q
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents 15 0 R >>
+endobj
+xref
+0 17
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000145 00000 n 
+0000000242 00000 n 
+0000000344 00000 n 
+0000000439 00000 n 
+0000000539 00000 n 
+0000010062 00000 n 
+0000010224 00000 n 
+0000017458 00000 n 
+0000017621 00000 n 
+0000026426 00000 n 
+0000026590 00000 n 
+0000038891 00000 n 
+0000039055 00000 n 
+0000044809 00000 n 
+trailer
+<< /Size 17 /Root 1 0 R >>
+startxref
+44973
+%%EOF
