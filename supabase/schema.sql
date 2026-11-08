@@ -903,7 +903,7 @@ BEGIN
     SELECT
       COALESCE(item->>'id', gen_random_uuid()::TEXT),
       COALESCE(item->>'date', ''),
-      COALESCE(item->>'contractor', ''),
+      UPPER(TRIM(COALESCE(item->>'contractor', ''))),
       COALESCE(item->>'vesselName', ''),
       COALESCE((item->>'volume')::NUMERIC, 0),
       COALESCE(item->>'startTime', '08:00'),
@@ -960,7 +960,7 @@ BEGIN
     SELECT
       COALESCE(item->>'id', gen_random_uuid()::TEXT),
       COALESCE(item->>'date', ''),
-      COALESCE(item->>'client', ''),
+      UPPER(TRIM(COALESCE(item->>'client', ''))),
       COALESCE(item->>'vessel', ''),
       COALESCE((item->>'volume')::NUMERIC, 0)
     FROM jsonb_array_elements(p_state->'forecastDispatches') AS item;

@@ -27,6 +27,7 @@ const SESSION_KEY = 'tangguh_active_session_v2';
 
 let pendingSaveCount = 0;
 let lastLocalMutationAt = 0;
+let hasUnsyncedLocalChanges = false;
 
 function hasOperationalRecords(s: AppOperationalState | null): boolean {
   if (!s) return false;
@@ -367,6 +368,28 @@ export const useAppStore = create<AppStore>((set, get) => ({
       return;
     }
 
+    // If a previous cloud save failed while offline, retry pushing local state first
+    if (hasUnsyncedLocalChanges && pendingSaveCount === 0) {
+      const currentClean = sanitizeOperationalState(get().state);
+      const username = get().currentUser?.username || 'Admin';
+      try {
+        const pushRes = await fetch('/api/state', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-role': username,
+          },
+          body: JSON.stringify({ state: currentClean }),
+        });
+        if (pushRes.ok) {
+          hasUnsyncedLocalChanges = false;
+        }
+      } catch {
+        // Still offline; do not overwrite local unsynced changes during silent poll
+        if (silent) return;
+      }
+    }
+
     if (!silent) {
       set({ isSyncing: true });
     }
@@ -429,6 +452,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   persistState: (nextState: AppOperationalState) => {
+    const prevState = get().state;
     const clean = sanitizeOperationalState(nextState);
     lastLocalMutationAt = Date.now();
     set({ state: clean, lastSyncedAt: new Date().toISOString() });
@@ -445,7 +469,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
       (async () => {
         try {
-          let savedViaApi = false;
+          let savedToCloud = false;
+          let rejectedByRbac = false;
+          let errorMessage = '';
+
           try {
             const res = await fetch('/api/state', {
               method: 'PUT',
@@ -455,13 +482,42 @@ export const useAppStore = create<AppStore>((set, get) => ({
               },
               body: JSON.stringify({ state: clean }),
             });
-            savedViaApi = res.ok;
+            if (res.ok) {
+              savedToCloud = true;
+            } else if (res.status >= 400 && res.status < 500) {
+              // 4xx = RBAC / validation error from server -> do NOT bypass via direct Supabase fallback
+              rejectedByRbac = true;
+              const errData = await res.json().catch(() => ({}));
+              errorMessage =
+                errData?.error || 'Permission denied by server policy.';
+            }
           } catch {
-            savedViaApi = false;
+            // Network error -> allow direct Supabase fallback below
           }
 
-          if (!savedViaApi) {
-            await SupabaseProvider.upsertState(clean);
+          if (rejectedByRbac) {
+            set({ state: prevState });
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(prevState));
+            } catch {
+              // ignore
+            }
+            get().showToast(errorMessage, 'error');
+            return;
+          }
+
+          if (!savedToCloud) {
+            savedToCloud = await SupabaseProvider.upsertState(clean);
+          }
+
+          if (savedToCloud) {
+            hasUnsyncedLocalChanges = false;
+          } else {
+            hasUnsyncedLocalChanges = true;
+            get().showToast(
+              'Saved locally — cloud sync pending (will retry automatically).',
+              'warning'
+            );
           }
         } finally {
           pendingSaveCount = Math.max(0, pendingSaveCount - 1);
@@ -715,40 +771,44 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // --- OPERATIONAL CRUD ---
   saveBunkering: (payload) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditOperations && !user.canEdit)) {
+    if (!user || !user.canEditOperations) {
       get().showToast('Permission denied: Operations Edit access required.', 'error');
       return;
     }
-    let workingState = get().state;
-    // Automatically register client if a new contractor name was provided
-    if (
-      payload.contractor &&
-      !workingState.clients.some(
-        (c) => c.name.toLowerCase() === payload.contractor.trim().toLowerCase()
-      )
-    ) {
-      try {
-        workingState = ClientService.addClient(
-          workingState,
-          payload.contractor.trim()
-        ).state;
-      } catch {
-        // ignore if already exists
+    try {
+      let workingState = get().state;
+      // Automatically register client if a new contractor name was provided
+      if (
+        payload.contractor &&
+        !workingState.clients.some(
+          (c) => c.name.toLowerCase() === payload.contractor.trim().toLowerCase()
+        )
+      ) {
+        try {
+          workingState = ClientService.addClient(
+            workingState,
+            payload.contractor.trim()
+          ).state;
+        } catch {
+          // ignore if already exists
+        }
       }
+      const nextState = InventoryService.saveBunkering(workingState, payload);
+      get().persistState(nextState);
+      get().showToast(
+        payload.id
+          ? 'Bunkering dispatch record updated.'
+          : 'Bunker dispatch record saved successfully.',
+        'success'
+      );
+    } catch (err: any) {
+      get().showToast(err?.message || 'Failed to save dispatch.', 'error');
     }
-    const nextState = InventoryService.saveBunkering(workingState, payload);
-    get().persistState(nextState);
-    get().showToast(
-      payload.id
-        ? 'Bunkering dispatch record updated.'
-        : 'Bunker dispatch record saved successfully.',
-      'success'
-    );
   },
 
   deleteBunkering: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canDeleteOperations && !user.canDelete)) {
+    if (!user || !user.canDeleteOperations) {
       get().showToast('Permission denied: Operations Delete access required.', 'error');
       return;
     }
@@ -759,7 +819,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   bulkImportBunkerings: (items) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditOperations && !user.canEdit)) {
+    if (!user || !user.canEditOperations) {
       get().showToast('Permission denied: Operations Edit access required.', 'error');
       return;
     }
@@ -769,7 +829,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const importedClientNames = Array.from(
       new Set(
         items
-          .map((item) => (item.contractor || '').trim())
+          .map((item) => (item.contractor || '').trim().toUpperCase())
           .filter((name) => name && name !== 'UNASSIGNED')
       )
     );
@@ -789,6 +849,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     const newRecords: BunkeringRecord[] = items.map((item, idx) => ({
       ...item,
+      contractor: (item.contractor || '').trim().toUpperCase(),
       id: `bnk_imp_${Date.now()}_${idx}`,
     }));
     const nextState: AppOperationalState = {
@@ -804,7 +865,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   saveSounding: (payload) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditOperations && !user.canEdit)) {
+    if (!user || !user.canEditOperations) {
       get().showToast('Permission denied: Operations Edit access required.', 'error');
       return;
     }
@@ -820,7 +881,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   deleteSounding: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canDeleteOperations && !user.canDelete)) {
+    if (!user || !user.canDeleteOperations) {
       get().showToast('Permission denied: Operations Delete access required.', 'error');
       return;
     }
@@ -831,25 +892,29 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   saveTopup: (payload) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditOperations && !user.canEdit)) {
+    if (!user || !user.canEditOperations) {
       get().showToast('Permission denied: Operations Edit access required.', 'error');
       return;
     }
-    const nextState = InventoryService.saveTopup(get().state, payload);
-    get().persistState(nextState);
-    get().showToast(
-      payload.status === 'Completed'
-        ? `Cargo received! +${formatNumber(payload.volume)} L credited to Book ROB.`
-        : payload.id
-        ? 'Inbound cargo top-up voyage updated.'
-        : 'Inbound cargo top-up voyage added.',
-      'success'
-    );
+    try {
+      const nextState = InventoryService.saveTopup(get().state, payload);
+      get().persistState(nextState);
+      get().showToast(
+        payload.status === 'Completed'
+          ? `Cargo received! +${formatNumber(payload.volume)} L credited to Book ROB.`
+          : payload.id
+          ? 'Inbound cargo top-up voyage updated.'
+          : 'Inbound cargo top-up voyage added.',
+        'success'
+      );
+    } catch (err: any) {
+      get().showToast(err?.message || 'Failed to save cargo top-up.', 'error');
+    }
   },
 
   receiveTopup: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditOperations && !user.canEdit)) {
+    if (!user || !user.canEditOperations) {
       get().showToast('Permission denied: Operations Edit access required.', 'error');
       return;
     }
@@ -864,7 +929,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   deleteTopup: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canDeleteOperations && !user.canDelete)) {
+    if (!user || !user.canDeleteOperations) {
       get().showToast('Permission denied: Operations Delete access required.', 'error');
       return;
     }
@@ -875,7 +940,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   saveForecastDispatch: (payload) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditForecast && !user.canEdit)) {
+    if (!user || !user.canEditForecast) {
       get().showToast('Permission denied: Forecast Edit access required.', 'error');
       return;
     }
@@ -910,7 +975,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   deleteForecastDispatch: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canDeleteForecast && !user.canDelete)) {
+    if (!user || !user.canDeleteForecast) {
       get().showToast('Permission denied: Forecast Delete access required.', 'error');
       return;
     }
@@ -921,7 +986,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   saveForecastTopup: (payload) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditForecast && !user.canEdit)) {
+    if (!user || !user.canEditForecast) {
       get().showToast('Permission denied: Forecast Edit access required.', 'error');
       return;
     }
@@ -937,7 +1002,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   deleteForecastTopup: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canDeleteForecast && !user.canDelete)) {
+    if (!user || !user.canDeleteForecast) {
       get().showToast('Permission denied: Forecast Delete access required.', 'error');
       return;
     }
@@ -948,7 +1013,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   executeForecastDispatch: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditForecast && !user.canEditOperations && !user.canEdit)) return;
+    if (!user || (!user.canEditForecast && !user.canEditOperations)) return;
     const { state: nextState, executed } =
       InventoryService.executeForecastDispatch(get().state, id);
     if (!executed) return;
@@ -963,7 +1028,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   executeForecastTopup: (id) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditForecast && !user.canEditOperations && !user.canEdit)) return;
+    if (!user || (!user.canEditForecast && !user.canEditOperations)) return;
     const { state: nextState, executed } =
       InventoryService.executeForecastTopup(get().state, id);
     if (!executed) return;
@@ -976,7 +1041,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setShoreTankDailyRob: (dateIso, robLiters) => {
     const user = get().currentUser;
-    if (!user || (!user.canEditForecast && !user.canEditOperations && !user.canEdit)) return;
+    if (!user || !user.canEditForecast) return;
     const nextState = InventoryService.setShoreTankDailyRob(
       get().state,
       dateIso,

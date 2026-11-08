@@ -28,17 +28,10 @@ export function DispatchView() {
   const [clientFilter, setClientFilter] = useState('ALL');
 
   const canEdit = Boolean(
-    currentUser?.canEditOperations ??
-      (currentUser?.roleCode === 'admin' ||
-        currentUser?.roleCode === 'fuel_coordinator' ||
-        currentUser?.roleCode === 'staff' ||
-        currentUser?.canEdit)
+    currentUser?.canEditOperations || currentUser?.roleCode === 'admin'
   );
   const canDelete = Boolean(
-    currentUser?.canDeleteOperations ??
-      (currentUser?.roleCode === 'admin' ||
-        currentUser?.roleCode === 'fuel_coordinator' ||
-        currentUser?.canDelete)
+    currentUser?.canDeleteOperations || currentUser?.roleCode === 'admin'
   );
   const isAdmin = Boolean(
     currentUser?.canManageClients || currentUser?.roleCode === 'admin'

@@ -102,216 +102,192 @@ function normalizeUserAccount(raw: any): UserAccount | null {
   };
 }
 
-function countTotalRecords(s: AppOperationalState | null): number {
-  if (!s) return 0;
-  return (
-    (s.clients?.length || 0) +
-    (s.bunkerings?.length || 0) +
-    (s.soundings?.length || 0) +
-    (s.topups?.length || 0) +
-    (s.forecastDispatches?.length || 0) +
-    (s.forecastTopups?.length || 0)
-  );
+const toUpperName = (n: unknown): string =>
+  String(n || '').trim().replace(/\s+/g, ' ').toUpperCase();
+
+interface TableSyncSpec {
+  table: string;
+  rows: Record<string, unknown>[];
 }
 
 /**
- * Direct REST synchronization for all relational tables using safe WHERE clauses
- * (`?id=not.is.null`) so PostgreSQL `pg_safeupdate` never blocks table updates.
+ * Upsert rows into a table, then prune ids that no longer exist in the state.
+ * Never empties a table mid-sync (no delete-all), and every request is checked.
+ * Filters always carry a WHERE clause, so `pg_safeupdate` never blocks them.
+ */
+async function syncTable(
+  cfg: SupabaseConfig,
+  spec: TableSyncSpec
+): Promise<boolean> {
+  const upsertHeaders = buildSupabaseHeaders(cfg.key, {
+    Prefer: 'resolution=merge-duplicates,return=minimal',
+  });
+  const plainHeaders = buildSupabaseHeaders(cfg.key, {
+    Prefer: 'return=minimal',
+  });
+
+  if (spec.rows.length > 0) {
+    const upRes = await fetch(
+      `${cfg.url}/rest/v1/${spec.table}?on_conflict=id`,
+      {
+        method: 'POST',
+        headers: upsertHeaders,
+        body: JSON.stringify(spec.rows),
+        cache: 'no-store',
+      }
+    );
+    if (!upRes.ok) {
+      const detail = await upRes.text().catch(() => '');
+      console.error(`[SupabaseProvider] upsert ${spec.table} failed:`, detail);
+      return false;
+    }
+  }
+
+  const ids = spec.rows.map((r) => String(r.id));
+  const filter =
+    ids.length > 0
+      ? `id=not.in.(${ids
+          .map((id) => `"${id.replace(/"/g, '\\"')}"`)
+          .join(',')})`
+      : 'id=not.is.null';
+  const delRes = await fetch(`${cfg.url}/rest/v1/${spec.table}?${filter}`, {
+    method: 'DELETE',
+    headers: plainHeaders,
+    cache: 'no-store',
+  });
+  if (!delRes.ok) {
+    const detail = await delRes.text().catch(() => '');
+    console.error(`[SupabaseProvider] prune ${spec.table} failed:`, detail);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Mirror the authoritative snapshot into all relational reporting tables
+ * (`storage_configs`, `clients`, `bunkerings`, `soundings`, `topups`,
+ * `forecast_dispatches`, `forecast_topups`). Returns false if any table failed.
  */
 async function syncRelationalTablesRest(
   cfg: SupabaseConfig,
   state: AppOperationalState
 ): Promise<boolean> {
-  const headers = buildSupabaseHeaders(cfg.key, {
-    Prefer: 'resolution=merge-duplicates,return=minimal',
-  });
-  const deleteHeaders = buildSupabaseHeaders(cfg.key);
-
   try {
-    // 1. Upsert storage_configs
     const sc = state.storageConfig;
-    await fetch(`${cfg.url}/rest/v1/storage_configs?on_conflict=id`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        id: 'default',
-        vessel_name: sc.vesselName || 'SPOB TRANS BILGIT',
-        total_capacity: Number(sc.totalCapacity) || 5000000,
-        deadstock: Number(sc.deadstock) || 0,
-        initial_opening_rob: Number(sc.initialOpeningRob) || 0,
-        shore_tank_name: sc.shoreTankName || 'SHORE TANK COMBO',
-        shore_tank_initial_rob: Number(sc.shoreTankInitialRob) || 0,
-        updated_at: new Date().toISOString(),
-      }),
-      cache: 'no-store',
-    });
-
-    // 2. Sync clients
-    await fetch(`${cfg.url}/rest/v1/clients?id=not.is.null`, {
-      method: 'DELETE',
-      headers: deleteHeaders,
-      cache: 'no-store',
-    });
-    if (Array.isArray(state.clients) && state.clients.length > 0) {
-      await fetch(`${cfg.url}/rest/v1/clients?on_conflict=id`, {
+    const cfgRes = await fetch(
+      `${cfg.url}/rest/v1/storage_configs?on_conflict=id`,
+      {
         method: 'POST',
-        headers,
-        body: JSON.stringify(
-          state.clients.map((c) => ({
-            id: c.id,
-            name: c.name.trim().toUpperCase(),
-            color: c.color || '#0284C7',
-            badge_class:
-              c.badgeClass || 'bg-sky-50 text-sky-700 border-sky-200',
-            dot_class: c.dotClass || 'bg-sky-500',
-            updated_at: new Date().toISOString(),
-          }))
-        ),
+        headers: buildSupabaseHeaders(cfg.key, {
+          Prefer: 'resolution=merge-duplicates,return=minimal',
+        }),
+        body: JSON.stringify({
+          id: 'default',
+          vessel_name: sc.vesselName || 'SPOB TRANS BILGIT',
+          total_capacity: Number(sc.totalCapacity) || 5000000,
+          deadstock: Number(sc.deadstock) || 0,
+          initial_opening_rob: Number(sc.initialOpeningRob) || 0,
+          shore_tank_name: sc.shoreTankName || 'SHORE TANK COMBO',
+          shore_tank_initial_rob: Number(sc.shoreTankInitialRob) || 0,
+          updated_at: new Date().toISOString(),
+        }),
         cache: 'no-store',
-      });
-    }
+      }
+    );
+    let allOk = cfgRes.ok;
 
-    // 3. Sync bunkerings
-    await fetch(`${cfg.url}/rest/v1/bunkerings?id=not.is.null`, {
-      method: 'DELETE',
-      headers: deleteHeaders,
-      cache: 'no-store',
-    });
-    if (Array.isArray(state.bunkerings) && state.bunkerings.length > 0) {
-      await fetch(`${cfg.url}/rest/v1/bunkerings?on_conflict=id`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          state.bunkerings.map((b) => ({
-            id: b.id,
-            date: b.date,
-            contractor: b.contractor,
-            vessel_name: b.vesselName,
-            volume: Number(b.volume) || 0,
-            start_time: b.startTime || '08:00',
-            end_time: b.endTime || '10:00',
-            flow_rate: Number(b.flowRate) || 0,
-          }))
-        ),
-        cache: 'no-store',
-      });
-    }
+    const nowMs = Date.now();
+    const specs: TableSyncSpec[] = [
+      {
+        table: 'clients',
+        rows: (state.clients || []).map((c) => ({
+          id: c.id,
+          name: toUpperName(c.name),
+          color: c.color || '#0284C7',
+          badge_class: c.badgeClass || 'bg-sky-50 text-sky-700 border-sky-200',
+          dot_class: c.dotClass || 'bg-sky-500',
+          updated_at: new Date().toISOString(),
+        })),
+      },
+      {
+        table: 'bunkerings',
+        rows: (state.bunkerings || []).map((b) => ({
+          id: b.id,
+          date: b.date || '',
+          contractor: toUpperName(b.contractor),
+          vessel_name: b.vesselName || '',
+          volume: Math.max(0, Number(b.volume) || 0),
+          start_time: b.startTime || '08:00',
+          end_time: b.endTime || '10:00',
+          flow_rate: Number(b.flowRate) || 0,
+        })),
+      },
+      {
+        table: 'soundings',
+        rows: (state.soundings || []).map((s) => ({
+          id: s.id,
+          date: s.date || '',
+          time: s.time || '08:00',
+          liters: Math.max(0, Number(s.liters) || 0),
+          draft_fwd:
+            s.draftFwd !== null && s.draftFwd !== undefined && String(s.draftFwd) !== ''
+              ? Number(s.draftFwd)
+              : null,
+          draft_aft:
+            s.draftAft !== null && s.draftAft !== undefined && String(s.draftAft) !== ''
+              ? Number(s.draftAft)
+              : null,
+          remarks: s.remarks || '',
+          doc_name: s.docName || null,
+          doc_data_url: s.docDataUrl || null,
+        })),
+      },
+      {
+        table: 'topups',
+        // created_at preserves list order (newest first) for relational reporting
+        rows: (state.topups || []).map((t, idx) => ({
+          id: t.id,
+          vessel: t.vessel || '',
+          volume: Math.max(0, Number(t.volume) || 0),
+          load_port: t.loadPort || 'Balikpapan',
+          disch_port: t.dischPort || 'Tangguh Offshore',
+          etd: t.etd || '',
+          eta: t.eta || '',
+          atd: t.atd || '',
+          ata: t.ata || '',
+          status: t.status || 'Planned',
+          created_at: new Date(nowMs - idx * 1000).toISOString(),
+        })),
+      },
+      {
+        table: 'forecast_dispatches',
+        rows: (state.forecastDispatches || []).map((fd) => ({
+          id: fd.id,
+          date: fd.date || '',
+          client: toUpperName(fd.client),
+          vessel: fd.vessel || '',
+          volume: Math.max(0, Number(fd.volume) || 0),
+        })),
+      },
+      {
+        table: 'forecast_topups',
+        rows: (state.forecastTopups || []).map((ft) => ({
+          id: ft.id,
+          date: ft.date || '',
+          vessel: ft.vessel || '',
+          floating_volume: Math.max(0, Number(ft.floatingVolume) || 0),
+          shore_volume: Math.max(0, Number(ft.shoreVolume) || 0),
+        })),
+      },
+    ];
 
-    // 4. Sync soundings
-    await fetch(`${cfg.url}/rest/v1/soundings?id=not.is.null`, {
-      method: 'DELETE',
-      headers: deleteHeaders,
-      cache: 'no-store',
-    });
-    if (Array.isArray(state.soundings) && state.soundings.length > 0) {
-      await fetch(`${cfg.url}/rest/v1/soundings?on_conflict=id`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          state.soundings.map((s) => ({
-            id: s.id,
-            date: s.date,
-            time: s.time || '08:00',
-            liters: Number(s.liters) || 0,
-            draft_fwd:
-              s.draftFwd !== null && s.draftFwd !== undefined
-                ? Number(s.draftFwd)
-                : null,
-            draft_aft:
-              s.draftAft !== null && s.draftAft !== undefined
-                ? Number(s.draftAft)
-                : null,
-            remarks: s.remarks || '',
-            doc_name: s.docName || null,
-            doc_data_url: s.docDataUrl || null,
-          }))
-        ),
-        cache: 'no-store',
-      });
+    for (const spec of specs) {
+      const ok = await syncTable(cfg, spec);
+      allOk = allOk && ok;
     }
-
-    // 5. Sync topups
-    await fetch(`${cfg.url}/rest/v1/topups?id=not.is.null`, {
-      method: 'DELETE',
-      headers: deleteHeaders,
-      cache: 'no-store',
-    });
-    if (Array.isArray(state.topups) && state.topups.length > 0) {
-      await fetch(`${cfg.url}/rest/v1/topups?on_conflict=id`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          state.topups.map((t) => ({
-            id: t.id,
-            vessel: t.vessel,
-            volume: Number(t.volume) || 0,
-            load_port: t.loadPort || 'Balikpapan',
-            disch_port: t.dischPort || 'Tangguh Offshore',
-            etd: t.etd || '',
-            eta: t.eta || '',
-            atd: t.atd || '',
-            ata: t.ata || '',
-            status: t.status || 'Planned',
-          }))
-        ),
-        cache: 'no-store',
-      });
-    }
-
-    // 6. Sync forecast_dispatches
-    await fetch(`${cfg.url}/rest/v1/forecast_dispatches?id=not.is.null`, {
-      method: 'DELETE',
-      headers: deleteHeaders,
-      cache: 'no-store',
-    });
-    if (
-      Array.isArray(state.forecastDispatches) &&
-      state.forecastDispatches.length > 0
-    ) {
-      await fetch(`${cfg.url}/rest/v1/forecast_dispatches?on_conflict=id`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          state.forecastDispatches.map((fd) => ({
-            id: fd.id,
-            date: fd.date,
-            client: fd.client,
-            vessel: fd.vessel,
-            volume: Number(fd.volume) || 0,
-          }))
-        ),
-        cache: 'no-store',
-      });
-    }
-
-    // 7. Sync forecast_topups
-    await fetch(`${cfg.url}/rest/v1/forecast_topups?id=not.is.null`, {
-      method: 'DELETE',
-      headers: deleteHeaders,
-      cache: 'no-store',
-    });
-    if (
-      Array.isArray(state.forecastTopups) &&
-      state.forecastTopups.length > 0
-    ) {
-      await fetch(`${cfg.url}/rest/v1/forecast_topups?on_conflict=id`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          state.forecastTopups.map((ft) => ({
-            id: ft.id,
-            date: ft.date,
-            vessel: ft.vessel,
-            floating_volume: Number(ft.floatingVolume) || 0,
-            shore_volume: Number(ft.shoreVolume) || 0,
-          }))
-        ),
-        cache: 'no-store',
-      });
-    }
-
-    return true;
-  } catch {
+    return allOk;
+  } catch (err) {
+    console.error('[SupabaseProvider] relational sync error:', err);
     return false;
   }
 }
@@ -388,132 +364,124 @@ export class SupabaseProvider {
   }
 
   /**
-   * Fetch current operational state from Supabase relational tables and
-   * `public.operational_state`, reconciling any unsynced snapshot records.
+   * Fetch current operational state. `public.operational_state` is the single
+   * source of truth (written first on every save); the relational RPC is only a
+   * fallback when no snapshot exists yet.
    */
   static async fetchState(): Promise<AppOperationalState | null> {
     const cfg = getSupabaseConfig();
     if (!cfg) return null;
 
-    let rpcState: AppOperationalState | null = null;
-    let snapState: AppOperationalState | null = null;
-
-    const [rpcResult, snapResult] = await Promise.allSettled([
-      fetch(`${cfg.url}/rest/v1/rpc/get_full_operational_state`, {
-        method: 'POST',
-        headers: buildSupabaseHeaders(cfg.key),
-        body: JSON.stringify({}),
-        cache: 'no-store',
-      }),
-      fetch(
-        `${cfg.url}/rest/v1/operational_state?id=eq.current&select=payload,updated_at`,
+    // 1. Authoritative snapshot
+    try {
+      const res = await fetch(
+        `${cfg.url}/rest/v1/operational_state?id=eq.current&select=payload`,
         {
           method: 'GET',
           headers: buildSupabaseHeaders(cfg.key),
           cache: 'no-store',
         }
-      ),
-    ]);
-
-    if (rpcResult.status === 'fulfilled' && rpcResult.value.ok) {
-      try {
-        const rpcData = await rpcResult.value.json();
-        if (rpcData && typeof rpcData === 'object' && rpcData.storageConfig) {
-          rpcState = sanitizeOperationalState(rpcData);
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    if (snapResult.status === 'fulfilled' && snapResult.value.ok) {
-      try {
-        const rows = await snapResult.value.json();
+      );
+      if (res.ok) {
+        const rows = await res.json();
         if (Array.isArray(rows) && rows.length > 0 && rows[0]?.payload) {
-          snapState = sanitizeOperationalState(rows[0].payload);
+          return sanitizeOperationalState(rows[0].payload);
         }
-      } catch {
-        // ignore
       }
+    } catch {
+      // fall through to relational RPC
     }
 
-    if (rpcState && snapState) {
-      // Preserve shoreTankDailyRobs from operational_state snapshot
-      rpcState.shoreTankDailyRobs = {
-        ...(snapState.shoreTankDailyRobs || {}),
-        ...(rpcState.shoreTankDailyRobs || {}),
-      };
-
-      // If operational_state snapshot has data that relational tables missed
-      // (e.g. due to prior pg_safeupdate RPC error), heal relational tables and return snapshot
-      if (countTotalRecords(snapState) > 0 && countTotalRecords(rpcState) === 0) {
-        void syncRelationalTablesRest(cfg, snapState);
-        return snapState;
+    // 2. Fallback: assemble from relational tables
+    try {
+      const rpcRes = await fetch(
+        `${cfg.url}/rest/v1/rpc/get_full_operational_state`,
+        {
+          method: 'POST',
+          headers: buildSupabaseHeaders(cfg.key),
+          body: JSON.stringify({}),
+          cache: 'no-store',
+        }
+      );
+      if (rpcRes.ok) {
+        const rpcData = await rpcRes.json();
+        if (rpcData && typeof rpcData === 'object' && rpcData.storageConfig) {
+          return sanitizeOperationalState(rpcData);
+        }
       }
-
-      return rpcState;
+    } catch {
+      // ignore
     }
 
-    if (snapState) {
-      void syncRelationalTablesRest(cfg, snapState);
-      return snapState;
-    }
-
-    return rpcState;
+    return null;
   }
 
   /**
-   * Synchronize operational state into `operational_state` AND all relational tables
-   * (`storage_configs`, `clients`, `bunkerings`, `soundings`, `topups`,
-   * `forecast_dispatches`, `forecast_topups`).
+   * Persist state: (1) authoritative snapshot in `operational_state`,
+   * (2) mirror into relational tables via RPC, falling back to checked REST sync.
+   * Returns true only if the snapshot was saved.
    */
   static async upsertState(state: AppOperationalState): Promise<boolean> {
     const cfg = getSupabaseConfig();
     if (!cfg) return false;
 
     const cleanState = sanitizeOperationalState(state);
-    let snapshotSaved = false;
-    let relationalSaved = false;
 
-    // 1. Always save authoritative JSONB snapshot to operational_state
+    let snapshotSaved = false;
     try {
-      const endpoint = `${cfg.url}/rest/v1/operational_state?on_conflict=id`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: buildSupabaseHeaders(cfg.key, {
-          Prefer: 'resolution=merge-duplicates,return=minimal',
-        }),
-        body: JSON.stringify({
-          id: 'current',
-          payload: cleanState,
-          updated_at: new Date().toISOString(),
-        }),
-        cache: 'no-store',
-      });
+      const res = await fetch(
+        `${cfg.url}/rest/v1/operational_state?on_conflict=id`,
+        {
+          method: 'POST',
+          headers: buildSupabaseHeaders(cfg.key, {
+            Prefer: 'resolution=merge-duplicates,return=minimal',
+          }),
+          body: JSON.stringify({
+            id: 'current',
+            payload: cleanState,
+            updated_at: new Date().toISOString(),
+          }),
+          cache: 'no-store',
+        }
+      );
       snapshotSaved = res.ok;
-    } catch {
-      // ignore
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        console.error('[SupabaseProvider] snapshot save failed:', detail);
+      }
+    } catch (err) {
+      console.error('[SupabaseProvider] snapshot save error:', err);
     }
 
-    // 2. Try RPC sync_full_operational_state
+    if (!snapshotSaved) {
+      return false;
+    }
+
+    let relationalSaved = false;
     try {
-      const rpcEndpoint = `${cfg.url}/rest/v1/rpc/sync_full_operational_state`;
-      const rpcRes = await fetch(rpcEndpoint, {
-        method: 'POST',
-        headers: buildSupabaseHeaders(cfg.key),
-        body: JSON.stringify({ p_state: cleanState }),
-        cache: 'no-store',
-      });
+      const rpcRes = await fetch(
+        `${cfg.url}/rest/v1/rpc/sync_full_operational_state`,
+        {
+          method: 'POST',
+          headers: buildSupabaseHeaders(cfg.key),
+          body: JSON.stringify({ p_state: cleanState }),
+          cache: 'no-store',
+        }
+      );
       relationalSaved = rpcRes.ok;
     } catch {
       relationalSaved = false;
     }
 
-    // 3. If RPC failed (e.g. pg_safeupdate on unqualified DELETE), sync relational tables directly via REST
     if (!relationalSaved) {
       relationalSaved = await syncRelationalTablesRest(cfg, cleanState);
+      if (!relationalSaved) {
+        console.error(
+          '[SupabaseProvider] relational mirror sync incomplete; snapshot is authoritative.'
+        );
+      }
     }
 
-    return snapshotSaved || relationalSaved;
+    return true;
   }
 }

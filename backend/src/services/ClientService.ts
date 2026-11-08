@@ -13,7 +13,7 @@ export class ClientService {
     // Support batch entry separated by comma or newline so users can add multiple clients at once
     const rawNames = name
       .split(/[,;\n]+/)
-      .map((n) => n.trim())
+      .map((n) => n.trim().replace(/\s+/g, ' ').toUpperCase())
       .filter(Boolean);
 
     if (rawNames.length === 0) {
@@ -87,7 +87,7 @@ export class ClientService {
     newName: string,
     colorHex?: string
   ): { state: AppOperationalState; client: ClientRecord } {
-    const cleanName = newName.trim();
+    const cleanName = newName.trim().replace(/\s+/g, ' ').toUpperCase();
     if (!cleanName) {
       throw new Error('Client name cannot be empty.');
     }

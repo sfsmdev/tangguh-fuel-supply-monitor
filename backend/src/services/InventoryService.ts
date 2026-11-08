@@ -14,6 +14,22 @@ export class InventoryService {
     state: AppOperationalState,
     payload: Omit<BunkeringRecord, 'id' | 'flowRate'> & { id?: string }
   ): AppOperationalState {
+    const volume = Number(payload.volume) || 0;
+    if (volume <= 0) {
+      throw new Error('Dispatched volume must be greater than 0 L.');
+    }
+    if (!payload.date) {
+      throw new Error('Dispatch date is required.');
+    }
+    const contractor = String(payload.contractor || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toUpperCase();
+    if (!contractor) {
+      throw new Error('Please select a valid client.');
+    }
+    payload = { ...payload, contractor, volume };
+
     const flowRate = calculateFlowRate(
       Number(payload.volume) || 0,
       payload.startTime,
@@ -113,6 +129,25 @@ export class InventoryService {
     state: AppOperationalState,
     payload: Omit<TopupRecord, 'id'> & { id?: string }
   ): AppOperationalState {
+    const volume = Number(payload.volume) || 0;
+    if (volume <= 0) {
+      throw new Error('Cargo volume must be greater than 0 L.');
+    }
+    if (!String(payload.vessel || '').trim()) {
+      throw new Error('Performing vessel name is required.');
+    }
+    if (payload.etd && payload.eta && payload.eta < payload.etd) {
+      throw new Error('Planned ETA cannot be earlier than Planned ETD.');
+    }
+    if (payload.atd && payload.ata && payload.ata < payload.atd) {
+      throw new Error('Actual ATA cannot be earlier than Actual ATD.');
+    }
+    // Completed voyages must carry an actual arrival time (used by historical Book ROB)
+    if (payload.status === 'Completed' && !payload.ata) {
+      payload = { ...payload, ata: getWITIsoDateTime() };
+    }
+    payload = { ...payload, vessel: String(payload.vessel).trim(), volume };
+
     if (payload.id) {
       return {
         ...state,
@@ -174,6 +209,13 @@ export class InventoryService {
     state: AppOperationalState,
     payload: Omit<ForecastDispatch, 'id'> & { id?: string }
   ): AppOperationalState {
+    payload = {
+      ...payload,
+      client: String(payload.client || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toUpperCase(),
+    };
     if (payload.id) {
       return {
         ...state,

@@ -16,17 +16,10 @@ export function TopupView() {
   } = useAppStore();
 
   const canEdit = Boolean(
-    currentUser?.canEditOperations ??
-      (currentUser?.roleCode === 'admin' ||
-        currentUser?.roleCode === 'fuel_coordinator' ||
-        currentUser?.roleCode === 'staff' ||
-        currentUser?.canEdit)
+    currentUser?.canEditOperations || currentUser?.roleCode === 'admin'
   );
   const canDelete = Boolean(
-    currentUser?.canDeleteOperations ??
-      (currentUser?.roleCode === 'admin' ||
-        currentUser?.roleCode === 'fuel_coordinator' ||
-        currentUser?.canDelete)
+    currentUser?.canDeleteOperations || currentUser?.roleCode === 'admin'
   );
 
   const getStatusBadge = (status: string) => {

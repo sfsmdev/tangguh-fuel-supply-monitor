@@ -37,15 +37,25 @@ export function sanitizeOperationalState(
     storageConfig.vesselName = 'SPOB TRANS BILGIT';
   }
 
-  const clients: ClientRecord[] = Array.isArray(raw.clients)
-    ? [...raw.clients]
-    : [];
-  const bunkerings = Array.isArray(raw.bunkerings) ? raw.bunkerings : [];
+  // Client names are always stored in UPPERCASE for system-wide consistency
+  const toUpperName = (n: unknown): string =>
+    String(n || '').trim().replace(/\s+/g, ' ').toUpperCase();
+
+  const clients: ClientRecord[] = [];
+  (Array.isArray(raw.clients) ? raw.clients : []).forEach((c) => {
+    if (!c) return;
+    const upper = toUpperName(c.name);
+    if (!upper || clients.some((x) => x.name === upper)) return;
+    clients.push({ ...c, name: upper });
+  });
+  const bunkerings = (Array.isArray(raw.bunkerings) ? raw.bunkerings : []).map(
+    (b) => ({ ...b, contractor: toUpperName(b?.contractor) })
+  );
   const soundings = Array.isArray(raw.soundings) ? raw.soundings : [];
   const topups = Array.isArray(raw.topups) ? raw.topups : [];
-  const forecastDispatches = Array.isArray(raw.forecastDispatches)
-    ? raw.forecastDispatches
-    : [];
+  const forecastDispatches = (
+    Array.isArray(raw.forecastDispatches) ? raw.forecastDispatches : []
+  ).map((fd) => ({ ...fd, client: toUpperName(fd?.client) }));
   const forecastTopups = Array.isArray(raw.forecastTopups)
     ? raw.forecastTopups
     : [];

@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/useAppStore';
 import {
   BunkeringRecord,
   calculateFlowRate,
+  calculateSummary,
   formatNumber,
   getWITIsoDate,
   getWITIsoDateTime,
@@ -541,16 +542,37 @@ export function OperationalModals() {
                   store.showToast('Please select a valid client.', 'error');
                   return;
                 }
-                store.saveBunkering({
-                  id: dispatchModal.editItem?.id,
-                  date: dispDate,
-                  contractor: dispClient,
-                  vesselName: dispVessel.trim(),
-                  volume: Number(dispVolume) || 0,
-                  startTime: dispStart,
-                  endTime: dispEnd,
-                });
-                setDispatchModal({ isOpen: false, editItem: null });
+                const volume = Number(dispVolume) || 0;
+                if (volume <= 0) {
+                  store.showToast('Dispatched volume must be greater than 0 L.', 'error');
+                  return;
+                }
+                const currentBookRob = calculateSummary(state).bookRob;
+
+                const executeSave = () => {
+                  store.saveBunkering({
+                    id: dispatchModal.editItem?.id,
+                    date: dispDate,
+                    contractor: dispClient,
+                    vesselName: dispVessel.trim(),
+                    volume,
+                    startTime: dispStart,
+                    endTime: dispEnd,
+                  });
+                  setDispatchModal({ isOpen: false, editItem: null });
+                };
+
+                // Peringatan dan konfirmasi jika volume dispatch melebihi Book ROB
+                if (volume > currentBookRob) {
+                  store.openConfirm(
+                    'Warning: Volume Exceeds Book ROB',
+                    `Dispatched volume (${formatNumber(volume)} L) exceeds Current Book ROB (${formatNumber(currentBookRob)} L). Remaining Book ROB will be negative (${formatNumber(currentBookRob - volume)} L). Do you still want to proceed with this dispatch?`,
+                    executeSave,
+                    'Yes, Proceed'
+                  );
+                } else {
+                  executeSave();
+                }
               }}
               className="p-5 space-y-4"
             >
@@ -671,6 +693,31 @@ export function OperationalModals() {
                     onChange={(e) => setDispEnd(e.target.value)}
                     className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300"
                   />
+                </div>
+              </div>
+
+              {/* Live Book ROB & Impact Preview */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <div className="flex justify-between text-slate-500">
+                  <span>Current Book ROB:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    {formatNumber(calculateSummary(state).bookRob)} L
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+                  <span className="font-semibold text-slate-700">Projected ROB After Dispatch:</span>
+                  <span
+                    className={`font-mono font-bold ${
+                      calculateSummary(state).bookRob - (Number(dispVolume) || 0) < 0
+                        ? 'text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200'
+                        : 'text-emerald-700'
+                    }`}
+                  >
+                    {formatNumber(
+                      calculateSummary(state).bookRob - (Number(dispVolume) || 0)
+                    )}{' '}
+                    L
+                  </span>
                 </div>
               </div>
 
@@ -985,6 +1032,8 @@ export function OperationalModals() {
               <h3 className="text-sm font-bold text-slate-900">
                 {topupModal.editItem
                   ? 'Edit Inbound Cargo Voyage'
+                  : topupModal.defaultStatus === 'Completed'
+                  ? 'Entry Cargo Top-Up Received'
                   : 'Add Inbound Cargo Voyage'}
               </h3>
               <button
@@ -999,16 +1048,38 @@ export function OperationalModals() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                const volume = Number(topVolume) || 0;
+                if (volume <= 0) {
+                  store.showToast('Cargo volume must be greater than 0 L.', 'error');
+                  return;
+                }
+                if (!topVessel.trim()) {
+                  store.showToast('Performing vessel name is required.', 'error');
+                  return;
+                }
+                if (topEtd && topEta && topEta < topEtd) {
+                  store.showToast('Planned ETA cannot be earlier than Planned ETD.', 'error');
+                  return;
+                }
+                if (topAtd && topAta && topAta < topAtd) {
+                  store.showToast('Actual ATA cannot be earlier than Actual ATD.', 'error');
+                  return;
+                }
+                const finalAta =
+                  topStatus === 'Completed' && !topAta
+                    ? getWITIsoDateTime()
+                    : topAta;
+
                 store.saveTopup({
                   id: topupModal.editItem?.id,
                   vessel: topVessel.trim(),
-                  volume: Number(topVolume) || 0,
+                  volume,
                   loadPort: topLoadPort.trim(),
                   dischPort: topDischPort.trim(),
                   etd: topEtd,
                   eta: topEta,
                   atd: topAtd || undefined,
-                  ata: topAta || undefined,
+                  ata: finalAta || undefined,
                   status: topStatus,
                 });
                 setTopupModal({ isOpen: false, editItem: null });
@@ -1035,7 +1106,7 @@ export function OperationalModals() {
                   </label>
                   <input
                     type="number"
-                    min={0}
+                    min={1}
                     required
                     value={topVolume}
                     onChange={(e) => setTopVolume(e.target.value)}
@@ -1142,6 +1213,27 @@ export function OperationalModals() {
                   </option>
                 </select>
               </div>
+
+              {/* Live Impact Preview */}
+              {topStatus === 'Completed' && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-1">
+                  <div className="flex justify-between text-emerald-800">
+                    <span>Current Book ROB:</span>
+                    <span className="font-mono font-bold">
+                      {formatNumber(calculateSummary(state).bookRob)} L
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-emerald-950 font-bold pt-1 border-t border-emerald-200">
+                    <span>Projected ROB After Receiving:</span>
+                    <span className="font-mono">
+                      {formatNumber(
+                        calculateSummary(state).bookRob + (Number(topVolume) || 0)
+                      )}{' '}
+                      L
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <button

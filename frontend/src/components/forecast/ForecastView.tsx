@@ -46,12 +46,10 @@ export function ForecastView() {
   } = useAppStore();
 
   const canEdit = Boolean(
-    currentUser?.canEditForecast ??
-      (currentUser?.roleCode === 'admin' || currentUser?.roleCode === 'planner' || currentUser?.canEdit)
+    currentUser?.canEditForecast || currentUser?.roleCode === 'admin'
   );
   const canDelete = Boolean(
-    currentUser?.canDeleteForecast ??
-      (currentUser?.roleCode === 'admin' || currentUser?.roleCode === 'planner' || currentUser?.canDelete)
+    currentUser?.canDeleteForecast || currentUser?.roleCode === 'admin'
   );
   const isAdmin = Boolean(
     currentUser?.canManageClients ||
