@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { calculateSummary, formatNumber } from '@backend/index';
+import {
+  calculateBookRobAtDate,
+  calculateSummary,
+  formatNumber,
+} from '@backend/index';
 import {
   Gauge,
   Plus,
@@ -155,7 +159,12 @@ export function SoundingView() {
                 </tr>
               ) : (
                 sortedSoundings.map((s) => {
-                  const rowVariance = Number(s.liters) - summary.bookRob;
+                  const historicalBookRob = calculateBookRobAtDate(
+                    state,
+                    s.date,
+                    s.time
+                  );
+                  const rowVariance = Number(s.liters) - historicalBookRob;
                   const varSign = rowVariance >= 0 ? '+' : '';
                   const varBadgeClass =
                     rowVariance >= 0
@@ -170,8 +179,11 @@ export function SoundingView() {
                       <td className="p-3.5 text-right font-mono font-extrabold text-sky-800">
                         {formatNumber(s.liters)} L
                       </td>
-                      <td className="p-3.5 text-right font-mono font-semibold text-slate-600">
-                        {formatNumber(summary.bookRob)} L
+                      <td
+                        className="p-3.5 text-right font-mono font-semibold text-slate-600"
+                        title={`Book ROB calculated as of ${s.date} ${s.time}`}
+                      >
+                        {formatNumber(historicalBookRob)} L
                       </td>
                       <td className="p-3.5 text-right">
                         <span

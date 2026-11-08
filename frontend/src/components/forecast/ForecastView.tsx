@@ -38,6 +38,9 @@ export function ForecastView() {
     setRecordManageModal,
     deleteForecastDispatch,
     deleteForecastTopup,
+    executeForecastDispatch,
+    executeForecastTopup,
+    setShoreTankDailyRob,
     updateStorageConfig,
     openConfirm,
   } = useAppStore();
@@ -199,16 +202,24 @@ export function ForecastView() {
                 <span>{formatNumber(metric?.projectedRob || 0)} L</span>
                 {isWarn && <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
               </div>
+              <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                Usable: {formatNumber(metric?.usableRob || 0)} L
+              </div>
               <div className="mt-1">
                 {isWarn ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
                     <AlertTriangle className="w-2.5 h-2.5" />
-                    <span>Warning (≤300k L)</span>
+                    <span>
+                      {metric?.daysUntilThreshold !== null &&
+                      metric?.daysUntilThreshold !== undefined
+                        ? `Threshold in ${metric.daysUntilThreshold}d`
+                        : `≤${formatNumber(sim.safetyThreshold)} L`}
+                    </span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                     <CheckCircle2 className="w-2.5 h-2.5" />
-                    <span>Safe (&gt;300k L)</span>
+                    <span>Safe (&gt;{formatNumber(sim.safetyThreshold)} L)</span>
                   </span>
                 )}
               </div>
@@ -455,7 +466,7 @@ export function ForecastView() {
                   Projected ROB (L)
                 </td>
                 {sim.floatingTimeline.map((t) => {
-                  const isWarning = t.closingRob <= 300000;
+                  const isWarning = t.closingRob <= sim.safetyThreshold;
                   return (
                     <td
                       key={`rob_${t.iso}`}
@@ -498,6 +509,7 @@ export function ForecastView() {
       <FloatingForecastChart
         vesselName={vesselName}
         timeline={sim.floatingTimeline}
+        safetyThreshold={sim.safetyThreshold}
       />
 
       {/* STORAGE 2: SHORE TANK COMBO SECTION */}
@@ -611,14 +623,48 @@ export function ForecastView() {
               {/* Shore Running ROB Row */}
               <tr className="bg-slate-50 font-bold border-t-2 border-slate-300">
                 <td className="p-3 sticky left-0 bg-slate-50 z-10 border-r border-slate-200 text-emerald-900 shadow-xs">
-                  Running ROB (L)
+                  <div>Running ROB (L)</div>
+                  {canEdit && (
+                    <div className="text-[9px] font-normal text-slate-500">
+                      Click cell to override daily ROB
+                    </div>
+                  )}
                 </td>
                 {sim.shoreTimeline.map((t) => (
                   <td
                     key={`shore_rob_${t.iso}`}
-                    className="p-2.5 text-center border-r border-slate-200 font-mono text-xs text-emerald-800"
+                    onClick={() => {
+                      if (!canEdit) return;
+                      const rawInput = window.prompt(
+                        `Enter actual/override Shore Tank ROB (Liters) for ${t.iso} (or leave blank to reset to automatic cumulative carry-over):`,
+                        t.isOverridden ? String(t.dynamicRobL) : ''
+                      );
+                      if (rawInput === null) return;
+                      const trimmed = rawInput.trim();
+                      if (trimmed === '') {
+                        setShoreTankDailyRob(t.iso, null);
+                      } else {
+                        const parsed = Number(trimmed);
+                        if (!isNaN(parsed) && parsed >= 0) {
+                          setShoreTankDailyRob(t.iso, parsed);
+                        }
+                      }
+                    }}
+                    className={`p-2.5 text-center border-r border-slate-200 font-mono text-xs text-emerald-800 ${
+                      canEdit ? 'cursor-pointer hover:bg-emerald-100/60' : ''
+                    } ${t.isOverridden ? 'bg-amber-50/70' : ''}`}
+                    title={
+                      canEdit
+                        ? `Click to set or clear daily ROB override on ${t.iso}`
+                        : undefined
+                    }
                   >
-                    {formatNumber(t.dynamicRobL)}
+                    <div>{formatNumber(t.dynamicRobL)}</div>
+                    {t.isOverridden && (
+                      <span className="inline-block text-[9px] px-1 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                        Manual ROB
+                      </span>
+                    )}
                   </td>
                 ))}
               </tr>
@@ -720,6 +766,25 @@ export function ForecastView() {
                               <button
                                 type="button"
                                 onClick={() =>
+                                  openConfirm(
+                                    'Execute Forecast Distribution as Actual Dispatch',
+                                    `Record ${fd.vessel} (${formatNumber(
+                                      fd.volume
+                                    )} L for ${fd.client}) on ${
+                                      fd.date
+                                    } into actual Daily Bunker Dispatch Log and deduct from live Book ROB?`,
+                                    () => executeForecastDispatch(fd.id),
+                                    'Record Actual'
+                                  )
+                                }
+                                className="p-1 rounded text-emerald-600 hover:bg-emerald-50"
+                                title="Record as Actual Dispatch"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
                                   setForecastDispatchModal({
                                     isOpen: true,
                                     editItem: fd,
@@ -810,6 +875,27 @@ export function ForecastView() {
                         {canEdit && (
                           <td className="p-3 text-right">
                             <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openConfirm(
+                                    'Execute Forecast Top-Up as Actual Replenishment',
+                                    `Record top-up from ${ft.vessel} (Floating: +${formatNumber(
+                                      ft.floatingVolume
+                                    )} L, Shore: +${formatNumber(
+                                      ft.shoreVolume
+                                    )} L) on ${
+                                      ft.date
+                                    } into actual storage inventory?`,
+                                    () => executeForecastTopup(ft.id),
+                                    'Receive Actual'
+                                  )
+                                }
+                                className="p-1 rounded text-emerald-600 hover:bg-emerald-50"
+                                title="Record as Actual Top-Up Received"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() =>

@@ -10,8 +10,11 @@ import {
   getWITIsoDate,
   getWITIsoDateTime,
   getWITIsoTime,
+  normalizeExcelDate,
+  normalizeExcelTime,
   TopupStatus,
 } from '@backend/index';
+import { downloadBunkeringExcelTemplate } from '@/lib/exportUtils';
 import {
   X,
   Plus,
@@ -21,6 +24,7 @@ import {
   Pencil,
   Trash2,
   Upload,
+  Download,
   CheckCircle2,
   AlertTriangle,
   Info,
@@ -142,20 +146,36 @@ export function OperationalModals() {
         const rows: any[] = XLSX.utils.sheet_to_json(sheet);
         const parsed: Omit<BunkeringRecord, 'id'>[] = rows
           .map((r) => {
-            const date = String(r.Date || r.date || getWITIsoDate());
+            const date = normalizeExcelDate(r.Date ?? r.date);
             const contractor = String(
               r.Client ||
                 r.Contractor ||
+                r['Client / Contractor'] ||
                 r.client ||
+                r.contractor ||
                 state.clients[0]?.name ||
                 'UNASSIGNED'
-            );
+            )
+              .trim()
+              .toUpperCase();
             const vesselName = String(
-              r.Vessel || r['Receiving Vessel'] || r.vesselName || 'VESSEL'
+              r.Vessel ||
+                r['Receiving Vessel'] ||
+                r['Vessel Name'] ||
+                r.vesselName ||
+                'VESSEL'
+            ).trim();
+            const volume = Number(
+              r.Volume || r['Volume (L)'] || r['Dispatched Volume'] || r.volume || 0
             );
-            const volume = Number(r.Volume || r['Volume (L)'] || r.volume || 0);
-            const startTime = String(r['Start Time'] || r.startTime || '08:00');
-            const endTime = String(r['End Time'] || r.endTime || '10:00');
+            const startTime = normalizeExcelTime(
+              r['Start Time'] ?? r.startTime,
+              '08:00'
+            );
+            const endTime = normalizeExcelTime(
+              r['End Time'] ?? r.endTime,
+              '10:00'
+            );
             return {
               date,
               contractor,
@@ -672,6 +692,22 @@ export function OperationalModals() {
               </button>
             </div>
             <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between bg-sky-50 border border-sky-200 rounded-xl px-3.5 py-2.5 text-xs">
+                <span className="text-sky-900 font-medium">
+                  Need the standard import format?
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadBunkeringExcelTemplate(state.clients[0]?.name || 'JGC')
+                  }
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-sky-100 text-sky-800 border border-sky-300 font-bold text-[11px] transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Template (.xlsx)</span>
+                </button>
+              </div>
+
               <label className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-sky-500 cursor-pointer block transition">
                 <Upload className="w-7 h-7 text-slate-400 mx-auto mb-2" />
                 <div className="text-xs font-bold text-slate-700">
@@ -1643,6 +1679,33 @@ export function OperationalModals() {
                       <button
                         type="button"
                         onClick={() => {
+                          const idToExecute = item.id;
+                          setRecordManageModal({
+                            isOpen: false,
+                            type: 'dispatch',
+                            id: '',
+                            date: '',
+                          });
+                          store.openConfirm(
+                            'Execute Forecast Distribution as Actual Dispatch',
+                            `Record ${item.vessel} (${formatNumber(
+                              item.volume
+                            )} L for ${item.client}) on ${
+                              item.date
+                            } into actual Daily Bunker Dispatch Log and deduct from live Book ROB?`,
+                            () => store.executeForecastDispatch(idToExecute),
+                            'Record Actual'
+                          );
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Record as Actual Dispatch</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
                           const dt = recordManageModal.date;
                           const cli =
                             recordManageModal.clientHint || item.client;
@@ -1740,6 +1803,35 @@ export function OperationalModals() {
                           </button>
                         )}
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const idToExecute = item.id;
+                          setRecordManageModal({
+                            isOpen: false,
+                            type: 'topup',
+                            id: '',
+                            date: '',
+                          });
+                          store.openConfirm(
+                            'Execute Forecast Top-Up as Actual Replenishment',
+                            `Record top-up from ${item.vessel} (Floating: +${formatNumber(
+                              item.floatingVolume
+                            )} L, Shore: +${formatNumber(
+                              item.shoreVolume
+                            )} L) on ${
+                              item.date
+                            } into actual storage inventory?`,
+                            () => store.executeForecastTopup(idToExecute),
+                            'Receive Actual'
+                          );
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Record as Actual Top-Up Received</span>
+                      </button>
 
                       <button
                         type="button"

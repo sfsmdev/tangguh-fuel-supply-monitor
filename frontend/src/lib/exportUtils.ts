@@ -148,7 +148,51 @@ export function exportFullReportToExcel(state: AppOperationalState) {
   const wsTopup = XLSX.utils.aoa_to_sheet(topupData);
   XLSX.utils.book_append_sheet(wb, wsTopup, 'Cargo Top-Ups');
 
+  // Sheet 6: Forecast Dispatches
+  const forecastDispatchData = [
+    ['Planned Date', 'Client / Contractor', 'Receiving Vessel', 'Planned Volume (L)'],
+    ...state.forecastDispatches.map((fd) => [
+      fd.date,
+      fd.client,
+      fd.vessel,
+      fd.volume,
+    ]),
+  ];
+  const wsFcDispatch = XLSX.utils.aoa_to_sheet(forecastDispatchData);
+  XLSX.utils.book_append_sheet(wb, wsFcDispatch, 'Forecast Dispatches');
+
+  // Sheet 7: Forecast Top-Ups
+  const forecastTopupData = [
+    [
+      'Planned Date',
+      'Supply Tanker',
+      'Floating Storage Volume (L)',
+      'Shore Tank Volume (L)',
+    ],
+    ...state.forecastTopups.map((ft) => [
+      ft.date,
+      ft.vessel,
+      ft.floatingVolume,
+      ft.shoreVolume,
+    ]),
+  ];
+  const wsFcTopup = XLSX.utils.aoa_to_sheet(forecastTopupData);
+  XLSX.utils.book_append_sheet(wb, wsFcTopup, 'Forecast Top-Ups');
+
   XLSX.writeFile(wb, `Tangguh_Fuel_Supply_Report_${getWITIsoDate()}.xlsx`);
+}
+
+export function downloadBunkeringExcelTemplate(sampleClientName: string = 'JGC') {
+  const wb = XLSX.utils.book_new();
+  const today = getWITIsoDate();
+  const rows = [
+    ['Date', 'Client', 'Vessel', 'Volume', 'Start Time', 'End Time'],
+    [today, sampleClientName || 'JGC', 'TB HIGHLIGHT', 25000, '08:00', '10:00'],
+    [today, 'SAIPEM', 'CB PACIFIC', 40000, '13:00', '15:30'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, 'Bunker Dispatch Template');
+  XLSX.writeFile(wb, `Tangguh_Bunker_Import_Template_${today}.xlsx`);
 }
 
 export function printExecutivePdfReport(state: AppOperationalState) {

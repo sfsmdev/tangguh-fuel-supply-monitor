@@ -24,6 +24,20 @@ import {
 const STORAGE_KEY = 'tangguh_fuel_state_v2_clean';
 const SESSION_KEY = 'tangguh_active_session_v2';
 
+function hasOperationalRecords(s: AppOperationalState | null): boolean {
+  if (!s) return false;
+  return (
+    s.clients.length > 0 ||
+    s.bunkerings.length > 0 ||
+    s.soundings.length > 0 ||
+    s.topups.length > 0 ||
+    s.forecastDispatches.length > 0 ||
+    s.forecastTopups.length > 0 ||
+    Number(s.storageConfig?.initialOpeningRob) > 0 ||
+    Number(s.storageConfig?.shoreTankInitialRob) > 0
+  );
+}
+
 export interface ToastItem {
   id: string;
   message: string;
@@ -44,6 +58,8 @@ interface AppStore {
   activeView: ViewId;
   forecastHorizonDays: number;
   isHydrated: boolean;
+  isSyncing: boolean;
+  lastSyncedAt: string | null;
 
   // Global UI Modals
   isClientModalOpen: boolean;
@@ -93,6 +109,7 @@ interface AppStore {
 
   // Hydrate & Sync
   hydrate: () => Promise<void>;
+  syncFromServer: (silent?: boolean) => Promise<void>;
   persistState: (nextState: AppOperationalState) => void;
 
   // Auth Actions
@@ -198,6 +215,10 @@ interface AppStore {
   ) => void;
   deleteForecastTopup: (id: string) => void;
 
+  executeForecastDispatch: (id: string) => void;
+  executeForecastTopup: (id: string) => void;
+  setShoreTankDailyRob: (dateIso: string, robLiters: number | null) => void;
+
   updateStorageConfig: (updates: Partial<StorageConfig>) => void;
   restoreFullState: (rawState: Partial<AppOperationalState>) => void;
   resetAllData: () => void;
@@ -209,6 +230,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   activeView: 'dashboardView',
   forecastHorizonDays: 14,
   isHydrated: false,
+  isSyncing: false,
+  lastSyncedAt: null,
 
   isClientModalOpen: false,
   isSwitchUserModalOpen: false,
@@ -280,7 +303,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     let serverState: AppOperationalState | null = null;
     try {
-      const res = await fetch('/api/state');
+      const res = await fetch('/api/state', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data?.state) {
@@ -291,16 +314,29 @@ export const useAppStore = create<AppStore>((set, get) => ({
       // ignore
     }
 
-    const finalState = localState || serverState || createCleanInitialState();
+    // Prioritize serverState from Supabase/API when available; fallback to localState if offline or server is empty
+    const useServer =
+      serverState &&
+      (hasOperationalRecords(serverState) || !hasOperationalRecords(localState));
+    const finalState =
+      (useServer ? serverState : localState) ||
+      serverState ||
+      localState ||
+      createCleanInitialState();
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(finalState));
-      if (localState) {
-        // Keep backend data_store.json synchronized with active state
+      const activeUser = get().currentUser;
+      if (
+        !hasOperationalRecords(serverState) &&
+        hasOperationalRecords(localState) &&
+        activeUser?.canEdit
+      ) {
         fetch('/api/state', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-role': 'admin',
+            'x-user-role': activeUser.username,
           },
           body: JSON.stringify({ state: finalState }),
         }).catch(() => {});
@@ -309,7 +345,49 @@ export const useAppStore = create<AppStore>((set, get) => ({
       // ignore
     }
 
-    set({ state: finalState, isHydrated: true });
+    set({
+      state: finalState,
+      isHydrated: true,
+      lastSyncedAt: new Date().toISOString(),
+    });
+  },
+
+  syncFromServer: async (silent = false) => {
+    if (typeof window === 'undefined') return;
+    if (!silent) {
+      set({ isSyncing: true });
+    }
+    try {
+      const res = await fetch('/api/state', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.state) {
+          const remoteState = sanitizeOperationalState(data.state);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteState));
+          set({
+            state: remoteState,
+            lastSyncedAt: new Date().toISOString(),
+            isSyncing: false,
+          });
+          if (!silent) {
+            get().showToast(
+              'Synchronized latest operational data from server.',
+              'success'
+            );
+          }
+          return;
+        }
+      }
+      if (!silent) {
+        set({ isSyncing: false });
+        get().showToast('Unable to reach server for live sync.', 'warning');
+      }
+    } catch {
+      if (!silent) {
+        set({ isSyncing: false });
+        get().showToast('Network error while syncing state.', 'error');
+      }
+    }
   },
 
   persistState: (nextState: AppOperationalState) => {
@@ -750,6 +828,50 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const nextState = InventoryService.deleteForecastTopup(get().state, id);
     get().persistState(nextState);
     get().showToast('Forecast top-up plan removed.', 'info');
+  },
+
+  executeForecastDispatch: (id) => {
+    if (!get().currentUser?.canEdit) return;
+    const { state: nextState, executed } =
+      InventoryService.executeForecastDispatch(get().state, id);
+    if (!executed) return;
+    get().persistState(nextState);
+    get().showToast(
+      `Executed forecast dispatch for ${executed.vesselName} (-${formatNumber(
+        executed.volume
+      )} L) into actual Bunker Dispatch Log.`,
+      'success'
+    );
+  },
+
+  executeForecastTopup: (id) => {
+    if (!get().currentUser?.canEdit) return;
+    const { state: nextState, executed } =
+      InventoryService.executeForecastTopup(get().state, id);
+    if (!executed) return;
+    get().persistState(nextState);
+    get().showToast(
+      `Executed forecast top-up from ${executed.vessel} into actual storage inventory.`,
+      'success'
+    );
+  },
+
+  setShoreTankDailyRob: (dateIso, robLiters) => {
+    if (!get().currentUser?.canEdit) return;
+    const nextState = InventoryService.setShoreTankDailyRob(
+      get().state,
+      dateIso,
+      robLiters
+    );
+    get().persistState(nextState);
+    get().showToast(
+      robLiters === null
+        ? `Reset Shore Tank ROB on ${dateIso} to automatic carry-over.`
+        : `Updated Shore Tank ROB on ${dateIso} to ${formatNumber(
+            robLiters
+          )} L.`,
+      'success'
+    );
   },
 
   updateStorageConfig: (updates) => {

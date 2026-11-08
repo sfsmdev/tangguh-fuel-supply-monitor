@@ -272,4 +272,95 @@ export class InventoryService {
       },
     };
   }
+
+  static setShoreTankDailyRob(
+    state: AppOperationalState,
+    dateIso: string,
+    robLiters: number | null
+  ): AppOperationalState {
+    const nextDailyRobs = { ...(state.shoreTankDailyRobs || {}) };
+    if (robLiters === null || robLiters === undefined || isNaN(Number(robLiters))) {
+      delete nextDailyRobs[dateIso];
+    } else {
+      nextDailyRobs[dateIso] = Math.max(0, Number(robLiters));
+    }
+    return {
+      ...state,
+      shoreTankDailyRobs: nextDailyRobs,
+    };
+  }
+
+  /**
+   * Converts a scheduled ForecastDispatch into an actual BunkeringRecord and removes the forecast plan.
+   */
+  static executeForecastDispatch(
+    state: AppOperationalState,
+    id: string,
+    startTime: string = '08:00',
+    endTime: string = '10:00'
+  ): { state: AppOperationalState; executed: BunkeringRecord | null } {
+    const target = state.forecastDispatches.find((fd) => fd.id === id);
+    if (!target) {
+      return { state, executed: null };
+    }
+
+    const withBunkering = this.saveBunkering(state, {
+      date: target.date,
+      contractor: target.client,
+      vesselName: target.vessel,
+      volume: Number(target.volume) || 0,
+      startTime,
+      endTime,
+    });
+
+    const finalState = this.deleteForecastDispatch(withBunkering, id);
+    return {
+      state: finalState,
+      executed: finalState.bunkerings[0] || null,
+    };
+  }
+
+  /**
+   * Converts a scheduled ForecastTopup into an actual Completed TopupRecord (for Floating Storage)
+   * and/or updates Shore Tank Base ROB (for Onshore Storage), then removes the forecast plan.
+   */
+  static executeForecastTopup(
+    state: AppOperationalState,
+    id: string
+  ): { state: AppOperationalState; executed: ForecastTopup | null } {
+    const target = state.forecastTopups.find((ft) => ft.id === id);
+    if (!target) {
+      return { state, executed: null };
+    }
+
+    let nextState = { ...state };
+    const floatingVol = Number(target.floatingVolume) || 0;
+    const shoreVol = Number(target.shoreVolume) || 0;
+    const dtIso = `${target.date}T12:00`;
+
+    if (floatingVol > 0) {
+      nextState = this.saveTopup(nextState, {
+        vessel: target.vessel,
+        volume: floatingVol,
+        loadPort: 'Balikpapan',
+        dischPort: nextState.storageConfig.vesselName || 'SPOB TRANS BILGIT',
+        etd: dtIso,
+        eta: dtIso,
+        atd: dtIso,
+        ata: getWITIsoDateTime(),
+        status: 'Completed',
+      });
+    }
+
+    if (shoreVol > 0) {
+      const currentShoreBase =
+        Number(nextState.storageConfig.shoreTankInitialRob) || 0;
+      nextState = this.updateStorageConfig(nextState, {
+        shoreTankInitialRob: currentShoreBase + shoreVol,
+      });
+    }
+
+    nextState = this.deleteForecastTopup(nextState, id);
+    return { state: nextState, executed: target };
+  }
 }

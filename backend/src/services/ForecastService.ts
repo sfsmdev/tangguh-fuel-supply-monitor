@@ -20,18 +20,22 @@ export interface ShoreTimelineDay {
   dayLabel: string;
   totalTopupL: number;
   dynamicRobL: number;
+  isOverridden?: boolean;
   topups: ForecastTopup[];
 }
 
 export interface DlahHorizonMetric {
   horizonDays: number;
   projectedRob: number;
+  usableRob: number;
+  daysUntilThreshold: number | null;
   isWarning: boolean;
 }
 
 export interface ForecastSimulationResult {
   liveFloatingRob: number;
   shoreBaselineRobL: number;
+  safetyThreshold: number;
   floatingTimeline: FloatingTimelineDay[];
   shoreTimeline: ShoreTimelineDay[];
   dlahMetrics: Record<number, DlahHorizonMetric>;
@@ -45,6 +49,8 @@ export class ForecastService {
     const summary = calculateSummary(state);
     const liveFloatingRob = Math.max(0, summary.bookRob);
     const shoreBaselineRobL = Number(state.storageConfig.shoreTankInitialRob) || 0;
+    const configuredDeadstock = Number(state.storageConfig.deadstock) || 0;
+    const safetyThreshold = configuredDeadstock > 0 ? configuredDeadstock : 300000;
 
     const timelineDates: { iso: string; dayLabel: string; dayIndex: number }[] = [];
     const baseDate = getNowWIT();
@@ -74,19 +80,11 @@ export class ForecastService {
       fTopupsByDate[ft.date].push(ft);
     });
 
-    // Only count dispatches belonging to registered clients in the master list
-    const activeClientNames = new Set(
-      state.clients.map((c) => c.name.toLowerCase())
-    );
-
     const floatingTimeline: FloatingTimelineDay[] = [];
     let currentFloatingRunning = liveFloatingRob;
 
     timelineDates.forEach((td) => {
-      const allDayDispatches = fDispatchesByDate[td.iso] || [];
-      const dayDispatches = allDayDispatches.filter((d) =>
-        activeClientNames.has((d.client || '').toLowerCase())
-      );
+      const dayDispatches = fDispatchesByDate[td.iso] || [];
       const dayTopups = fTopupsByDate[td.iso] || [];
 
       const totalDayDispatch = dayDispatches.reduce(
@@ -119,9 +117,10 @@ export class ForecastService {
       });
     });
 
-    // Shore Tank Combo cumulative carry-over balance
+    // Shore Tank Combo cumulative carry-over balance (supports daily override via shoreTankDailyRobs)
     const shoreTimeline: ShoreTimelineDay[] = [];
     let currentRunningRobL = shoreBaselineRobL;
+    const dailyOverrides = state.shoreTankDailyRobs || {};
 
     timelineDates.forEach((td) => {
       const dayTopups = fTopupsByDate[td.iso] || [];
@@ -129,13 +128,23 @@ export class ForecastService {
         (acc, t) => acc + (Number(t.shoreVolume) || 0),
         0
       );
-      currentRunningRobL = currentRunningRobL + dayShoreTopupL;
+      const hasOverride =
+        dailyOverrides[td.iso] !== undefined &&
+        dailyOverrides[td.iso] !== null &&
+        !isNaN(Number(dailyOverrides[td.iso]));
+
+      if (hasOverride) {
+        currentRunningRobL = Math.max(0, Number(dailyOverrides[td.iso]));
+      } else {
+        currentRunningRobL = currentRunningRobL + dayShoreTopupL;
+      }
 
       shoreTimeline.push({
         iso: td.iso,
         dayLabel: td.dayLabel,
         totalTopupL: dayShoreTopupL,
         dynamicRobL: currentRunningRobL,
+        isOverridden: hasOverride,
         topups: dayTopups,
       });
     });
@@ -146,15 +155,16 @@ export class ForecastService {
 
     horizons.forEach((h) => {
       let runningRob = liveFloatingRob;
+      let daysUntilThreshold: number | null =
+        liveFloatingRob <= safetyThreshold ? 0 : null;
+
       for (let i = 0; i < h; i++) {
         const d = new Date(baseDate.getTime() + i * 86400000);
         const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
           2,
           '0'
         )}-${String(d.getDate()).padStart(2, '0')}`;
-        const dispatches = (fDispatchesByDate[iso] || []).filter((item) =>
-          activeClientNames.has((item.client || '').toLowerCase())
-        );
+        const dispatches = fDispatchesByDate[iso] || [];
         const topups = fTopupsByDate[iso] || [];
         const dVol = dispatches.reduce(
           (acc, item) => acc + (Number(item.volume) || 0),
@@ -165,18 +175,24 @@ export class ForecastService {
           0
         );
         runningRob = runningRob + tVol - dVol;
+        if (daysUntilThreshold === null && runningRob <= safetyThreshold) {
+          daysUntilThreshold = i + 1;
+        }
       }
 
       dlahMetrics[h] = {
         horizonDays: h,
         projectedRob: runningRob,
-        isWarning: runningRob <= 300000,
+        usableRob: Math.max(0, runningRob - safetyThreshold),
+        daysUntilThreshold,
+        isWarning: runningRob <= safetyThreshold || daysUntilThreshold !== null,
       };
     });
 
     return {
       liveFloatingRob,
       shoreBaselineRobL,
+      safetyThreshold,
       floatingTimeline,
       shoreTimeline,
       dlahMetrics,

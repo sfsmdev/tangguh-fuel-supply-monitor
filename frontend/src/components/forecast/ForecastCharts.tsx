@@ -13,7 +13,11 @@ import {
   Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { FloatingTimelineDay, ShoreTimelineDay } from '@backend/index';
+import {
+  FloatingTimelineDay,
+  formatNumber,
+  ShoreTimelineDay,
+} from '@backend/index';
 import { TrendingUp } from 'lucide-react';
 
 ChartJS.register(
@@ -30,13 +34,15 @@ ChartJS.register(
 export function FloatingForecastChart({
   vesselName,
   timeline,
+  safetyThreshold = 300000,
 }: {
   vesselName: string;
   timeline: FloatingTimelineDay[];
+  safetyThreshold?: number;
 }) {
   const labels = timeline.map((t) => t.dayLabel);
   const robData = timeline.map((t) => t.closingRob);
-  const thresholdData = timeline.map(() => 300000);
+  const thresholdData = timeline.map(() => safetyThreshold);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
@@ -52,7 +58,9 @@ export function FloatingForecastChart({
           </span>
           <span className="inline-flex items-center gap-1.5 text-rose-600">
             <span className="w-3 h-0.5 border-t-2 border-dashed border-rose-500" />
-            <span>Warning Threshold (300,000 L)</span>
+            <span>
+              Warning Threshold ({formatNumber(safetyThreshold)} L)
+            </span>
           </span>
         </div>
       </div>

@@ -19,6 +19,19 @@ export function HullVisualizer() {
   const fillPct = Math.min(100, Math.max(0, (currentRob / capacity) * 100));
   const deadstockPct = Math.min(100, Math.max(0, (deadstock / capacity) * 100));
 
+  let statusLabel = 'SAFE LEVEL';
+  let statusClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  if (summary.bookRob < 0) {
+    statusLabel = 'NEGATIVE BOOK ROB';
+    statusClass = 'bg-rose-100 text-rose-800 border-rose-300';
+  } else if (currentRob > capacity) {
+    statusLabel = 'OVER CAPACITY';
+    statusClass = 'bg-rose-100 text-rose-800 border-rose-300';
+  } else if (deadstock > 0 && currentRob <= deadstock) {
+    statusLabel = 'AT / BELOW DEADSTOCK';
+    statusClass = 'bg-amber-100 text-amber-800 border-amber-300';
+  }
+
   const latestSoundingObj = summary.latestSoundingObj;
   const fwdDraft =
     latestSoundingObj?.draftFwd !== undefined &&
@@ -43,9 +56,16 @@ export function HullVisualizer() {
             Dynamic B50 liquid level relative to total storage capacity.
           </p>
         </div>
-        <span className="font-mono text-sm font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800">
-          {fillPct.toFixed(1)}%
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${statusClass}`}
+          >
+            {statusLabel}
+          </span>
+          <span className="font-mono text-sm font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800">
+            {fillPct.toFixed(1)}%
+          </span>
+        </div>
       </div>
 
       {/* Hull Simulation Diagram */}

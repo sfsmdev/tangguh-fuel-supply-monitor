@@ -15,6 +15,9 @@ interface TopHeaderProps {
 export function TopHeader({ onToggleMobileMenu }: TopHeaderProps) {
   const {
     currentUser,
+    isSyncing,
+    lastSyncedAt,
+    syncFromServer,
     setClientModalOpen,
     setSwitchUserModalOpen,
   } = useAppStore();
@@ -32,6 +35,16 @@ export function TopHeader({ onToggleMobileMenu }: TopHeaderProps) {
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Periodic background synchronization with Supabase / API every 15s when tab is active
+  useEffect(() => {
+    const syncTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        void syncFromServer(true);
+      }
+    }, 15000);
+    return () => clearInterval(syncTimer);
+  }, [syncFromServer]);
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -92,17 +105,26 @@ export function TopHeader({ onToggleMobileMenu }: TopHeaderProps) {
             </span>
           </div>
 
-          {/* Real-Time Cloud Sync Pulse Indicator */}
-          <div
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold"
-            title="Real-time multi-device database synchronized"
+          {/* Real-Time Cloud Sync Interactive Button */}
+          <button
+            type="button"
+            onClick={() => void syncFromServer(false)}
+            disabled={isSyncing}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-[11px] font-semibold transition cursor-pointer disabled:opacity-60"
+            title={
+              lastSyncedAt
+                ? `Click to refresh live data from Supabase (Last synced: ${new Date(
+                    lastSyncedAt
+                  ).toLocaleTimeString()})`
+                : 'Click to synchronize live data from server'
+            }
           >
             <i
               className="fa-solid fa-arrows-rotate fa-spin text-emerald-600 text-[10px]"
-              style={{ animationDuration: '3s' }}
+              style={{ animationDuration: isSyncing ? '0.8s' : '3s' }}
             />
-            <span>Live Sync</span>
-          </div>
+            <span>{isSyncing ? 'Syncing...' : 'Live Sync'}</span>
+          </button>
 
           {/* Manage Clients Button (Admin & Operational Staff) */}
           {(currentUser?.canManageClients || currentUser?.canEdit) && (

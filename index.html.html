@@ -2953,14 +2953,41 @@
       }
       emptyState.classList.add('hidden');
 
-      const summary = calculateSummary();
-      const currentBookRob = summary.bookRob;
+      const initialRob = Number(appState.storageConfig.initialOpeningRob) || 0;
 
       soundings.forEach(item => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
 
-        const variance = Number(item.liters) - currentBookRob;
+        const sDate = (item.date || '').slice(0, 10);
+        const sTime = item.time && /^\d{2}:\d{2}/.test(item.time) ? item.time.slice(0, 5) : '23:59';
+
+        const topupAtTime = appState.topups
+          .filter(t => {
+            if (t.status !== 'Completed') return false;
+            const refDt = (t.ata || t.eta || t.etd || '').trim();
+            if (!refDt || !sDate) return true;
+            const tDate = refDt.slice(0, 10);
+            if (tDate < sDate) return true;
+            if (tDate > sDate) return false;
+            const tTime = refDt.includes('T') ? refDt.slice(11, 16) : '00:00';
+            return tTime <= sTime;
+          })
+          .reduce((acc, t) => acc + (Number(t.volume) || 0), 0);
+
+        const dispatchedAtTime = appState.bunkerings
+          .filter(b => {
+            const bDate = (b.date || '').slice(0, 10);
+            if (!bDate || !sDate) return true;
+            if (bDate < sDate) return true;
+            if (bDate > sDate) return false;
+            const bTime = (b.endTime || b.startTime || '00:00').slice(0, 5);
+            return bTime <= sTime;
+          })
+          .reduce((acc, b) => acc + (Number(b.volume) || 0), 0);
+
+        const rowBookRob = initialRob + topupAtTime - dispatchedAtTime;
+        const variance = Number(item.liters) - rowBookRob;
         const sign = variance >= 0 ? '+' : '';
         const varianceClass = variance >= 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200';
         const varianceText = `${sign}${formatNumber(variance)} L (${variance >= 0 ? 'Gain' : 'Loss'})`;
@@ -2994,7 +3021,7 @@
         tr.innerHTML = `
           <td class="px-4 py-3 font-mono text-[11px]">${item.date} ${item.time || ''}</td>
           <td class="px-4 py-3 text-right font-mono font-bold text-slate-900">${formatNumber(item.liters)} L</td>
-          <td class="px-4 py-3 text-right font-mono text-slate-500">${formatNumber(currentBookRob)} L</td>
+          <td class="px-4 py-3 text-right font-mono text-slate-500" title="Book ROB as of ${item.date} ${item.time || ''}">${formatNumber(rowBookRob)} L</td>
           <td class="px-4 py-3 text-right">
             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border ${varianceClass}">
               ${varianceText}

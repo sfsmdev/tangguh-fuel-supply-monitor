@@ -1,4 +1,5 @@
 import { AppOperationalState } from '../models/Inventory';
+import { ClientRecord, resolveClientColorStyle } from '../models/Client';
 import { DEFAULT_STORAGE_CONFIG } from '../models/StorageConfig';
 
 /**
@@ -36,19 +37,63 @@ export function sanitizeOperationalState(
     storageConfig.vesselName = 'SPOB TRANS BILGIT';
   }
 
+  const clients: ClientRecord[] = Array.isArray(raw.clients)
+    ? [...raw.clients]
+    : [];
+  const bunkerings = Array.isArray(raw.bunkerings) ? raw.bunkerings : [];
+  const soundings = Array.isArray(raw.soundings) ? raw.soundings : [];
+  const topups = Array.isArray(raw.topups) ? raw.topups : [];
+  const forecastDispatches = Array.isArray(raw.forecastDispatches)
+    ? raw.forecastDispatches
+    : [];
+  const forecastTopups = Array.isArray(raw.forecastTopups)
+    ? raw.forecastTopups
+    : [];
+  const shoreTankDailyRobs =
+    raw.shoreTankDailyRobs && typeof raw.shoreTankDailyRobs === 'object'
+      ? raw.shoreTankDailyRobs
+      : {};
+
+  // Ensure any contractor/client referenced in bunkerings or forecastDispatches is registered in clients
+  const referencedNames = new Set<string>();
+  bunkerings.forEach((b) => {
+    const name = (b?.contractor || '').trim();
+    if (name && name.toUpperCase() !== 'UNASSIGNED') referencedNames.add(name);
+  });
+  forecastDispatches.forEach((fd) => {
+    const name = (fd?.client || '').trim();
+    if (name && name.toUpperCase() !== 'UNASSIGNED') referencedNames.add(name);
+  });
+
+  const nowIso = new Date().toISOString();
+  referencedNames.forEach((refName) => {
+    const exists = clients.some(
+      (c) => (c?.name || '').toLowerCase() === refName.toLowerCase()
+    );
+    if (!exists) {
+      const style = resolveClientColorStyle(clients.length);
+      clients.push({
+        id: `cli_auto_${clients.length + 1}_${refName
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '')}`,
+        name: refName.toUpperCase(),
+        color: style.color,
+        badgeClass: style.badgeClass,
+        dotClass: style.dotClass,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
+  });
+
   return {
     storageConfig,
-    clients: Array.isArray(raw.clients) ? raw.clients : [],
-    bunkerings: Array.isArray(raw.bunkerings) ? raw.bunkerings : [],
-    soundings: Array.isArray(raw.soundings) ? raw.soundings : [],
-    topups: Array.isArray(raw.topups) ? raw.topups : [],
-    forecastDispatches: Array.isArray(raw.forecastDispatches)
-      ? raw.forecastDispatches
-      : [],
-    forecastTopups: Array.isArray(raw.forecastTopups) ? raw.forecastTopups : [],
-    shoreTankDailyRobs:
-      raw.shoreTankDailyRobs && typeof raw.shoreTankDailyRobs === 'object'
-        ? raw.shoreTankDailyRobs
-        : {},
+    clients,
+    bunkerings,
+    soundings,
+    topups,
+    forecastDispatches,
+    forecastTopups,
+    shoreTankDailyRobs,
   };
 }
