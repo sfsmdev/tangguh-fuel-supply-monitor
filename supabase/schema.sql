@@ -18,9 +18,19 @@ CREATE TABLE IF NOT EXISTS public.rbac_roles (
   can_delete BOOLEAN NOT NULL DEFAULT false,
   can_manage_storage BOOLEAN NOT NULL DEFAULT false,
   can_manage_clients BOOLEAN NOT NULL DEFAULT false,
+  can_edit_forecast BOOLEAN NOT NULL DEFAULT false,
+  can_delete_forecast BOOLEAN NOT NULL DEFAULT false,
+  can_edit_operations BOOLEAN NOT NULL DEFAULT false,
+  can_delete_operations BOOLEAN NOT NULL DEFAULT false,
   allowed_views TEXT[] NOT NULL DEFAULT ARRAY['dashboardView']::TEXT[],
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure newly added granular columns exist if table was already created
+ALTER TABLE public.rbac_roles ADD COLUMN IF NOT EXISTS can_edit_forecast BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.rbac_roles ADD COLUMN IF NOT EXISTS can_delete_forecast BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.rbac_roles ADD COLUMN IF NOT EXISTS can_edit_operations BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.rbac_roles ADD COLUMN IF NOT EXISTS can_delete_operations BOOLEAN NOT NULL DEFAULT false;
 
 ALTER TABLE public.rbac_roles ENABLE ROW LEVEL SECURITY;
 
@@ -39,13 +49,21 @@ INSERT INTO public.rbac_roles (
   can_delete,
   can_manage_storage,
   can_manage_clients,
+  can_edit_forecast,
+  can_delete_forecast,
+  can_edit_operations,
+  can_delete_operations,
   allowed_views
 )
 VALUES
   (
     'admin',
     'Full Access',
-    'Full Access (Akses semua menu, tambah/edit/hapus data, konfigurasi floating storage & reset database)',
+    'Full Access (Akses ke semua menu, izin tambah/edit/hapus seluruh data, konfigurasi floating storage, serta reset database)',
+    true,
+    true,
+    true,
+    true,
     true,
     true,
     true,
@@ -60,9 +78,34 @@ VALUES
     ]
   ),
   (
+    'planner',
+    'Planner',
+    'View-only pada semua fitur, namun memiliki izin penuh (input, edit, hapus) khusus pada modul Fuel Supply Forecast',
+    true,
+    true,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    ARRAY[
+      'dashboardView',
+      'forecastView',
+      'dispatchView',
+      'soundingView',
+      'topupView',
+      'settingsView'
+    ]
+  ),
+  (
     'management',
-    'View-Only (Executive)',
-    'View-Only (Dapat melihat semua menu dashboard & monitoring tanpa izin input/edit/hapus)',
+    'Manager',
+    'View-Only ke seluruh menu dashboard dan monitoring tanpa izin input/edit/hapus',
+    false,
+    false,
+    false,
+    false,
     false,
     false,
     false,
@@ -72,29 +115,39 @@ VALUES
       'forecastView',
       'dispatchView',
       'soundingView',
-      'topupView'
+      'topupView',
+      'settingsView'
     ]
   ),
   (
-    'staff',
-    'Operational',
-    'Operational (Dapat input & edit data harian, tombol hapus dinonaktifkan)',
+    'fuel_coordinator',
+    'Fuel Coordinator',
+    'Bisa melihat semua fitur/menu di seluruh sistem. Izin operasional (input, edit, hapus) strictly dibatasi hanya pada modul: Daily Bunker Dispatch, Closing ROB & Sounding, Cargo Topup Plan',
+    true,
     true,
     false,
     false,
     false,
+    false,
+    true,
+    true,
     ARRAY[
       'dashboardView',
       'forecastView',
       'dispatchView',
       'soundingView',
-      'topupView'
+      'topupView',
+      'settingsView'
     ]
   ),
   (
     'contractor',
-    'View-Only (Contractor)',
-    'View-Only (Akses khusus pemantauan pada Monitoring Dashboard, Forecast Matrix, Physical Sounding, & Cargo Plan)',
+    'External / Client',
+    'View-Only terbatas hanya untuk halaman: Monitoring Dashboard, Sounding, Fuel Supply Forecast, Topup Cargo Plan',
+    false,
+    false,
+    false,
+    false,
     false,
     false,
     false,
@@ -113,6 +166,10 @@ ON CONFLICT (role_code) DO UPDATE SET
   can_delete = EXCLUDED.can_delete,
   can_manage_storage = EXCLUDED.can_manage_storage,
   can_manage_clients = EXCLUDED.can_manage_clients,
+  can_edit_forecast = EXCLUDED.can_edit_forecast,
+  can_delete_forecast = EXCLUDED.can_delete_forecast,
+  can_edit_operations = EXCLUDED.can_edit_operations,
+  can_delete_operations = EXCLUDED.can_delete_operations,
   allowed_views = EXCLUDED.allowed_views,
   updated_at = NOW();
 
@@ -134,7 +191,15 @@ CREATE TABLE IF NOT EXISTS public.app_users (
 
 ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
 
--- Seed all 8 RBAC user accounts directly into Supabase with bcrypt password hashes
+-- -----------------------------------------------------------------------------
+-- 1. HAPUS SELURUH USER LAMA YANG SUDAH ADA DI SUPABASE
+-- Membersihkan akun lama (seperti staff/management versi lama) agar bersih total
+-- -----------------------------------------------------------------------------
+DELETE FROM public.app_users;
+
+-- -----------------------------------------------------------------------------
+-- 2. GANTI DENGAN DAFTAR USER, PASSWORD (BCRYPT), DAN KEWENANGAN BARU (9 Akun Resmi)
+-- -----------------------------------------------------------------------------
 INSERT INTO public.app_users (
   username,
   password_hash,
@@ -146,74 +211,83 @@ INSERT INTO public.app_users (
 )
 VALUES
   (
-    'admin',
+    'Admin',
     crypt('admin123', gen_salt('bf')),
     'Admin',
     'Administrator',
-    'Full Administrator',
+    'Full Access (Admin)',
     'admin',
     true
   ),
   (
-    'management',
-    crypt('manage2026', gen_salt('bf')),
-    'Management',
-    'Management',
-    'Executive Management (View-Only)',
+    'Planner',
+    crypt('set123', gen_salt('bf')),
+    'Planner',
+    'Planner Representative',
+    'Planner (Forecast Full Access)',
+    'planner',
+    true
+  ),
+  (
+    'Manager',
+    crypt('set123', gen_salt('bf')),
+    'Manager',
+    'Executive Manager',
+    'Manager (View-Only)',
     'management',
     true
   ),
   (
-    'staff',
-    crypt('staff2026', gen_salt('bf')),
-    'Staff',
-    'Operations Staff',
-    'Operational Staff (No Delete)',
-    'staff',
+    'Fuel Coordinator',
+    crypt('set123', gen_salt('bf')),
+    'Fuel Coordinator',
+    'Fuel Coordinator',
+    'Fuel Coordinator (Operations Full Access)',
+    'fuel_coordinator',
     true
   ),
   (
-    'jgc',
-    crypt('jgc2026', gen_salt('bf')),
+    'JGC',
+    crypt('jgc123', gen_salt('bf')),
     'JGC',
     'JGC Representative',
-    'Contractor: JGC (View-Only)',
+    'JGC (View-Only)',
     'contractor',
     true
   ),
   (
-    'saipem',
-    crypt('sai2026', gen_salt('bf')),
+    'SAIPEM',
+    crypt('sai123', gen_salt('bf')),
     'SAIPEM',
     'SAIPEM Representative',
-    'Contractor: SAIPEM (View-Only)',
+    'SAIPEM (View-Only)',
     'contractor',
     true
   ),
   (
-    'ptp',
-    crypt('ptp2026', gen_salt('bf')),
+    'PETROSEA',
+    crypt('ptp123', gen_salt('bf')),
     'PETROSEA',
     'PETROSEA Representative',
-    'Contractor: PETROSEA (View-Only)',
+    'PETROSEA (View-Only)',
     'contractor',
     true
   ),
   (
-    'bptangguh',
-    crypt('bp2026', gen_salt('bf')),
     'BP Tangguh',
-    'BP Tangguh Oversight',
-    'BP Tangguh Client (View-Only)',
+    crypt('bp123', gen_salt('bf')),
+    'BP Tangguh',
+    'BP Tangguh Representative',
+    'BP Tangguh (View-Only)',
     'contractor',
     true
   ),
   (
-    'user',
-    crypt('USER123', gen_salt('bf')),
-    'USER',
-    'Contractor User',
-    'View-Only (Contractor)',
+    'User',
+    crypt('User123', gen_salt('bf')),
+    'User',
+    'Client User',
+    'User (View-Only)',
     'contractor',
     true
   )
@@ -534,6 +608,10 @@ BEGIN
     'canDelete', r.can_delete,
     'canManageStorage', r.can_manage_storage,
     'canManageClients', r.can_manage_clients,
+    'canEditForecast', COALESCE(r.can_edit_forecast, false),
+    'canDeleteForecast', COALESCE(r.can_delete_forecast, false),
+    'canEditOperations', COALESCE(r.can_edit_operations, false),
+    'canDeleteOperations', COALESCE(r.can_delete_operations, false),
     'allowedViews', to_jsonb(r.allowed_views)
   )
   INTO v_result
@@ -574,10 +652,22 @@ BEGIN
     'canDelete', r.can_delete,
     'canManageStorage', r.can_manage_storage,
     'canManageClients', r.can_manage_clients,
+    'canEditForecast', COALESCE(r.can_edit_forecast, false),
+    'canDeleteForecast', COALESCE(r.can_delete_forecast, false),
+    'canEditOperations', COALESCE(r.can_edit_operations, false),
+    'canDeleteOperations', COALESCE(r.can_delete_operations, false),
     'allowedViews', to_jsonb(r.allowed_views)
   )
   INTO v_result
   FROM public.app_users u
+  INNER JOIN public.rbac_roles r ON r.role_code = u.role_code
+  WHERE LOWER(u.username) = LOWER(TRIM(COALESCE(p_username, '')))
+    AND u.is_active = true
+  LIMIT 1;
+
+  RETURN v_result;
+END;
+$$;
   INNER JOIN public.rbac_roles r ON r.role_code = u.role_code
   WHERE LOWER(u.username) = LOWER(TRIM(COALESCE(p_username, '')))
     AND u.is_active = true

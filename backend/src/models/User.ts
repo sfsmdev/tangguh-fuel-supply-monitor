@@ -6,7 +6,13 @@ export type ViewId =
   | 'topupView'
   | 'settingsView';
 
-export type RoleCode = 'admin' | 'management' | 'staff' | 'contractor';
+export type RoleCode =
+  | 'admin'
+  | 'planner'
+  | 'management'
+  | 'fuel_coordinator'
+  | 'staff'
+  | 'contractor';
 
 /**
  * RBAC Authority Schema stored in Supabase `public.rbac_roles`.
@@ -19,6 +25,10 @@ export interface RbacRoleSchema {
   canDelete: boolean;
   canManageStorage: boolean;
   canManageClients: boolean;
+  canEditForecast?: boolean;
+  canDeleteForecast?: boolean;
+  canEditOperations?: boolean;
+  canDeleteOperations?: boolean;
   allowedViews: ViewId[];
 }
 
@@ -38,5 +48,9 @@ export interface UserAccount {
   canDelete: boolean;
   canManageStorage: boolean;
   canManageClients: boolean;
+  canEditForecast?: boolean;
+  canDeleteForecast?: boolean;
+  canEditOperations?: boolean;
+  canDeleteOperations?: boolean;
   allowedViews: ViewId[];
 }

@@ -27,10 +27,21 @@ export function DispatchView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [clientFilter, setClientFilter] = useState('ALL');
 
-  const canEdit = Boolean(currentUser?.canEdit);
-  const canDelete = Boolean(currentUser?.canDelete);
+  const canEdit = Boolean(
+    currentUser?.canEditOperations ??
+      (currentUser?.roleCode === 'admin' ||
+        currentUser?.roleCode === 'fuel_coordinator' ||
+        currentUser?.roleCode === 'staff' ||
+        currentUser?.canEdit)
+  );
+  const canDelete = Boolean(
+    currentUser?.canDeleteOperations ??
+      (currentUser?.roleCode === 'admin' ||
+        currentUser?.roleCode === 'fuel_coordinator' ||
+        currentUser?.canDelete)
+  );
   const isAdmin = Boolean(
-    currentUser?.canManageClients || currentUser?.canEdit
+    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
   );
 
   const filteredDispatches = [...state.bunkerings]

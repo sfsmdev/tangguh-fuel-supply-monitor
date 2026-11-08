@@ -20,7 +20,9 @@ export function DashboardView() {
   } = useAppStore();
 
   const summary = calculateSummary(state);
-  const canEdit = Boolean(currentUser?.canEdit);
+  const canEdit = Boolean(
+    currentUser?.canEditOperations || currentUser?.roleCode === 'admin'
+  );
 
   let varianceBadgeText = '--';
   let varianceBadgeClass =

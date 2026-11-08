@@ -27,8 +27,19 @@ export function SoundingView() {
   } = useAppStore();
 
   const summary = calculateSummary(state);
-  const canEdit = Boolean(currentUser?.canEdit);
-  const canDelete = Boolean(currentUser?.canDelete);
+  const canEdit = Boolean(
+    currentUser?.canEditOperations ??
+      (currentUser?.roleCode === 'admin' ||
+        currentUser?.roleCode === 'fuel_coordinator' ||
+        currentUser?.roleCode === 'staff' ||
+        currentUser?.canEdit)
+  );
+  const canDelete = Boolean(
+    currentUser?.canDeleteOperations ??
+      (currentUser?.roleCode === 'admin' ||
+        currentUser?.roleCode === 'fuel_coordinator' ||
+        currentUser?.canDelete)
+  );
 
   const sortedSoundings = [...state.soundings].sort(
     (a, b) =>

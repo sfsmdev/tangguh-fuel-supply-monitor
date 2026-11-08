@@ -28,6 +28,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export function OperationalModals() {
@@ -65,13 +67,28 @@ export function OperationalModals() {
   } = store;
 
   const isAdmin = Boolean(
-    currentUser?.canManageClients || currentUser?.canEdit
+    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
   );
-  const canDelete = Boolean(currentUser?.canDelete);
+  const canEditOperations = Boolean(
+    currentUser?.canEditOperations || currentUser?.roleCode === 'admin'
+  );
+  const canDeleteOperations = Boolean(
+    currentUser?.canDeleteOperations || currentUser?.roleCode === 'admin'
+  );
+  const canEditForecast = Boolean(
+    currentUser?.canEditForecast || currentUser?.roleCode === 'admin'
+  );
+  const canDeleteForecast = Boolean(
+    currentUser?.canDeleteForecast || currentUser?.roleCode === 'admin'
+  );
+  const canDelete = Boolean(
+    currentUser?.canDelete || canDeleteOperations || canDeleteForecast
+  );
 
   // --- 1. SWITCH USER STATE ---
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
+  const [showSwitchPass, setShowSwitchPass] = useState(false);
 
   // --- 2. QUICK OPENING ROB STATE ---
   const [quickRobVal, setQuickRobVal] = useState('');
@@ -398,14 +415,28 @@ export function OperationalModals() {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Password
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={loginPass}
-                  onChange={(e) => setLoginPass(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showSwitchPass ? 'text' : 'password'}
+                    required
+                    value={loginPass}
+                    onChange={(e) => setLoginPass(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-3 pr-9 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSwitchPass(!showSwitchPass)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    title={showSwitchPass ? 'Hide password' : 'Show password'}
+                  >
+                    {showSwitchPass ? (
+                      <EyeOff className="w-3.5 h-3.5 text-slate-600" />
+                    ) : (
+                      <Eye className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"

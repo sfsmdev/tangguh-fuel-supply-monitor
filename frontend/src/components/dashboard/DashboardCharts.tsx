@@ -37,7 +37,7 @@ export function ContractorDistributionCard() {
   const { state, currentUser, setClientModalOpen } = useAppStore();
   const summary = calculateSummary(state);
   const canManageClients = Boolean(
-    currentUser?.canManageClients || currentUser?.canEdit
+    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
   );
 
   const clientValues = state.clients.map(

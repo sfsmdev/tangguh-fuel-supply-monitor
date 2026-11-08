@@ -58,16 +58,46 @@ function normalizeUserAccount(raw: any): UserAccount | null {
     ? raw.allowed_views
     : ['dashboardView'];
 
+  const roleCode = raw.roleCode || raw.role_code || undefined;
+  const canEditRaw = Boolean(raw.canEdit ?? raw.can_edit);
+  const canDeleteRaw = Boolean(raw.canDelete ?? raw.can_delete);
+
+  // Granular permissions: Forecast vs Operations
+  const canEditForecast = Boolean(
+    raw.canEditForecast ??
+      raw.can_edit_forecast ??
+      (roleCode === 'admin' || roleCode === 'planner')
+  );
+  const canDeleteForecast = Boolean(
+    raw.canDeleteForecast ??
+      raw.can_delete_forecast ??
+      (roleCode === 'admin' || roleCode === 'planner')
+  );
+  const canEditOperations = Boolean(
+    raw.canEditOperations ??
+      raw.can_edit_operations ??
+      (roleCode === 'admin' || roleCode === 'fuel_coordinator' || roleCode === 'staff')
+  );
+  const canDeleteOperations = Boolean(
+    raw.canDeleteOperations ??
+      raw.can_delete_operations ??
+      (roleCode === 'admin' || roleCode === 'fuel_coordinator')
+  );
+
   return {
     username: String(raw.username),
     entityName: raw.entityName || raw.entity_name || undefined,
     displayName: String(raw.displayName || raw.display_name || raw.username),
     roleLabel: String(raw.roleLabel || raw.role_label || 'Authorized User'),
-    roleCode: raw.roleCode || raw.role_code || undefined,
-    canEdit: Boolean(raw.canEdit ?? raw.can_edit),
-    canDelete: Boolean(raw.canDelete ?? raw.can_delete),
+    roleCode,
+    canEdit: canEditRaw || canEditForecast || canEditOperations,
+    canDelete: canDeleteRaw || canDeleteForecast || canDeleteOperations,
     canManageStorage: Boolean(raw.canManageStorage ?? raw.can_manage_storage),
     canManageClients: Boolean(raw.canManageClients ?? raw.can_manage_clients),
+    canEditForecast,
+    canDeleteForecast,
+    canEditOperations,
+    canDeleteOperations,
     allowedViews,
   };
 }

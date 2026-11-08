@@ -640,8 +640,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // --- OPERATIONAL CRUD ---
   saveBunkering: (payload) => {
-    if (!get().currentUser?.canEdit) {
-      get().showToast('Permission denied: Read-only access.', 'error');
+    const user = get().currentUser;
+    if (!user || (!user.canEditOperations && !user.canEdit)) {
+      get().showToast('Permission denied: Operations Edit access required.', 'error');
       return;
     }
     let workingState = get().state;
@@ -672,8 +673,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   deleteBunkering: (id) => {
-    if (!get().currentUser?.canDelete) {
-      get().showToast('Permission denied: Administrator required.', 'error');
+    const user = get().currentUser;
+    if (!user || (!user.canDeleteOperations && !user.canDelete)) {
+      get().showToast('Permission denied: Operations Delete access required.', 'error');
       return;
     }
     const nextState = InventoryService.deleteBunkering(get().state, id);
@@ -682,7 +684,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   bulkImportBunkerings: (items) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditOperations && !user.canEdit)) {
+      get().showToast('Permission denied: Operations Edit access required.', 'error');
+      return;
+    }
     let workingState = get().state;
 
     // Auto-register any new client names found in the imported Excel rows (unlimited clients)
@@ -723,7 +729,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   saveSounding: (payload) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditOperations && !user.canEdit)) {
+      get().showToast('Permission denied: Operations Edit access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.saveSounding(get().state, payload);
     get().persistState(nextState);
     get().showToast(
@@ -735,14 +745,22 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   deleteSounding: (id) => {
-    if (!get().currentUser?.canDelete) return;
+    const user = get().currentUser;
+    if (!user || (!user.canDeleteOperations && !user.canDelete)) {
+      get().showToast('Permission denied: Operations Delete access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.deleteSounding(get().state, id);
     get().persistState(nextState);
     get().showToast('Sounding record deleted.', 'info');
   },
 
   saveTopup: (payload) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditOperations && !user.canEdit)) {
+      get().showToast('Permission denied: Operations Edit access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.saveTopup(get().state, payload);
     get().persistState(nextState);
     get().showToast(
@@ -756,7 +774,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   receiveTopup: (id) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditOperations && !user.canEdit)) {
+      get().showToast('Permission denied: Operations Edit access required.', 'error');
+      return;
+    }
     const target = get().state.topups.find((t) => t.id === id);
     const nextState = InventoryService.receiveTopup(get().state, id);
     get().persistState(nextState);
@@ -767,14 +789,22 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   deleteTopup: (id) => {
-    if (!get().currentUser?.canDelete) return;
+    const user = get().currentUser;
+    if (!user || (!user.canDeleteOperations && !user.canDelete)) {
+      get().showToast('Permission denied: Operations Delete access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.deleteTopup(get().state, id);
     get().persistState(nextState);
     get().showToast('Cargo top-up voyage deleted.', 'info');
   },
 
   saveForecastDispatch: (payload) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditForecast && !user.canEdit)) {
+      get().showToast('Permission denied: Forecast Edit access required.', 'error');
+      return;
+    }
     let workingState = get().state;
     if (
       payload.client &&
@@ -805,14 +835,22 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   deleteForecastDispatch: (id) => {
-    if (!get().currentUser?.canDelete) return;
+    const user = get().currentUser;
+    if (!user || (!user.canDeleteForecast && !user.canDelete)) {
+      get().showToast('Permission denied: Forecast Delete access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.deleteForecastDispatch(get().state, id);
     get().persistState(nextState);
     get().showToast('Forecast distribution removed.', 'info');
   },
 
   saveForecastTopup: (payload) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditForecast && !user.canEdit)) {
+      get().showToast('Permission denied: Forecast Edit access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.saveForecastTopup(get().state, payload);
     get().persistState(nextState);
     get().showToast(
@@ -824,14 +862,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   deleteForecastTopup: (id) => {
-    if (!get().currentUser?.canDelete) return;
+    const user = get().currentUser;
+    if (!user || (!user.canDeleteForecast && !user.canDelete)) {
+      get().showToast('Permission denied: Forecast Delete access required.', 'error');
+      return;
+    }
     const nextState = InventoryService.deleteForecastTopup(get().state, id);
     get().persistState(nextState);
     get().showToast('Forecast top-up plan removed.', 'info');
   },
 
   executeForecastDispatch: (id) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditForecast && !user.canEditOperations && !user.canEdit)) return;
     const { state: nextState, executed } =
       InventoryService.executeForecastDispatch(get().state, id);
     if (!executed) return;
@@ -845,7 +888,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   executeForecastTopup: (id) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditForecast && !user.canEditOperations && !user.canEdit)) return;
     const { state: nextState, executed } =
       InventoryService.executeForecastTopup(get().state, id);
     if (!executed) return;
@@ -857,7 +901,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   setShoreTankDailyRob: (dateIso, robLiters) => {
-    if (!get().currentUser?.canEdit) return;
+    const user = get().currentUser;
+    if (!user || (!user.canEditForecast && !user.canEditOperations && !user.canEdit)) return;
     const nextState = InventoryService.setShoreTankDailyRob(
       get().state,
       dateIso,

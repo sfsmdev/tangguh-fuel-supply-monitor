@@ -45,10 +45,16 @@ export function ForecastView() {
     openConfirm,
   } = useAppStore();
 
-  const canEdit = Boolean(currentUser?.canEdit);
-  const canDelete = Boolean(currentUser?.canDelete);
+  const canEdit = Boolean(
+    currentUser?.canEditForecast ??
+      (currentUser?.roleCode === 'admin' || currentUser?.roleCode === 'planner' || currentUser?.canEdit)
+  );
+  const canDelete = Boolean(
+    currentUser?.canDeleteForecast ??
+      (currentUser?.roleCode === 'admin' || currentUser?.roleCode === 'planner' || currentUser?.canDelete)
+  );
   const isAdmin = Boolean(
-    currentUser?.canManageClients || currentUser?.canEdit
+    currentUser?.canManageClients || currentUser?.roleCode === 'admin'
   );
 
   const vesselName = state.storageConfig.vesselName || 'SPOB TRANS BILGIT';

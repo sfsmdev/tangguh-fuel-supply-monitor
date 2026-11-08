@@ -202,8 +202,16 @@
                 required 
                 autocomplete="current-password"
                 placeholder="••••••••" 
-                class="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300/80 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/80 focus:bg-white transition text-slate-800 placeholder-slate-400 shadow-xs"
+                class="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300/80 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/80 focus:bg-white transition text-slate-800 placeholder-slate-400 shadow-xs"
               >
+              <button 
+                type="button" 
+                id="togglePageLoginPassword" 
+                class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition p-1" 
+                title="Show / Hide password"
+              >
+                <i class="fa-solid fa-eye text-xs"></i>
+              </button>
             </div>
           </div>
 
@@ -1303,7 +1311,17 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-            <input type="password" id="loginPassword" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="••••••••">
+            <div class="relative">
+              <input type="password" id="loginPassword" required class="w-full pl-3 pr-10 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" placeholder="••••••••">
+              <button 
+                type="button" 
+                id="toggleLoginPassword" 
+                class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 transition p-1" 
+                title="Show / Hide password"
+              >
+                <i class="fa-solid fa-eye text-xs"></i>
+              </button>
+            </div>
           </div>
           <button type="submit" class="w-full py-2.5 px-4 bg-sky-800 hover:bg-sky-900 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-right-to-bracket"></i>
@@ -1900,83 +1918,147 @@
     // --- 1. RBAC PRESET USERS & PERMISSIONS ---
     const RBAC_USERS = {
       admin: {
-        username: 'admin',
+        username: 'Admin',
         password: 'admin123',
         displayName: 'Administrator',
-        roleLabel: 'Full Administrator',
+        roleLabel: 'Full Access (Admin)',
+        roleCode: 'admin',
         canEdit: true,
         canDelete: true,
         canManageStorage: true,
+        canManageClients: true,
+        canEditForecast: true,
+        canDeleteForecast: true,
+        canEditOperations: true,
+        canDeleteOperations: true,
+        allowedViews: ['dashboardView', 'forecastView', 'dispatchView', 'soundingView', 'topupView', 'settingsView']
+      },
+      planner: {
+        username: 'Planner',
+        password: 'set123',
+        displayName: 'Planner Representative',
+        roleLabel: 'Planner (Forecast Full Access)',
+        roleCode: 'planner',
+        canEdit: true,
+        canDelete: true,
+        canManageStorage: false,
+        canManageClients: false,
+        canEditForecast: true,
+        canDeleteForecast: true,
+        canEditOperations: false,
+        canDeleteOperations: false,
         allowedViews: ['dashboardView', 'forecastView', 'dispatchView', 'soundingView', 'topupView', 'settingsView']
       },
       management: {
-        username: 'management',
-        password: 'manage2026',
-        displayName: 'Management',
-        roleLabel: 'Executive Management (View-Only)',
+        username: 'Manager',
+        password: 'set123',
+        displayName: 'Executive Manager',
+        roleLabel: 'Manager (View-Only)',
+        roleCode: 'management',
         canEdit: false,
         canDelete: false,
         canManageStorage: false,
-        allowedViews: ['dashboardView', 'forecastView', 'dispatchView', 'soundingView', 'topupView']
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: false,
+        canDeleteOperations: false,
+        allowedViews: ['dashboardView', 'forecastView', 'dispatchView', 'soundingView', 'topupView', 'settingsView']
       },
-      staff: {
-        username: 'staff',
-        password: 'staff2026',
-        displayName: 'Operations Staff',
-        roleLabel: 'Operational Staff (No Delete)',
+      fuelcoordinator: {
+        username: 'Fuel Coordinator',
+        password: 'set123',
+        displayName: 'Fuel Coordinator',
+        roleLabel: 'Fuel Coordinator (Operations Full Access)',
+        roleCode: 'fuel_coordinator',
         canEdit: true,
-        canDelete: false,
+        canDelete: true,
         canManageStorage: false,
-        allowedViews: ['dashboardView', 'forecastView', 'dispatchView', 'soundingView', 'topupView']
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: true,
+        canDeleteOperations: true,
+        allowedViews: ['dashboardView', 'forecastView', 'dispatchView', 'soundingView', 'topupView', 'settingsView']
       },
       jgc: {
-        username: 'jgc',
-        password: 'jgc2026',
+        username: 'JGC',
+        password: 'jgc123',
         displayName: 'JGC Representative',
         roleLabel: 'Contractor: JGC (View-Only)',
+        roleCode: 'contractor',
         canEdit: false,
         canDelete: false,
         canManageStorage: false,
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: false,
+        canDeleteOperations: false,
         allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView']
       },
       saipem: {
-        username: 'saipem',
-        password: 'sai2026',
+        username: 'SAIPEM',
+        password: 'sai123',
         displayName: 'SAIPEM Representative',
         roleLabel: 'Contractor: SAIPEM (View-Only)',
+        roleCode: 'contractor',
         canEdit: false,
         canDelete: false,
         canManageStorage: false,
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: false,
+        canDeleteOperations: false,
         allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView']
       },
       ptp: {
-        username: 'ptp',
-        password: 'ptp2026',
+        username: 'PETROSEA',
+        password: 'ptp123',
         displayName: 'PETROSEA Representative',
         roleLabel: 'Contractor: PETROSEA (View-Only)',
+        roleCode: 'contractor',
         canEdit: false,
         canDelete: false,
         canManageStorage: false,
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: false,
+        canDeleteOperations: false,
         allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView']
       },
       bptangguh: {
-        username: 'bptangguh',
-        password: 'bp2026',
-        displayName: 'BP Tangguh Oversight',
+        username: 'BP Tangguh',
+        password: 'bp123',
+        displayName: 'BP Tangguh Representative',
         roleLabel: 'BP Tangguh Client (View-Only)',
+        roleCode: 'contractor',
         canEdit: false,
         canDelete: false,
         canManageStorage: false,
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: false,
+        canDeleteOperations: false,
         allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView']
       },
       user: {
-        username: 'user',
-        password: 'USER123',
-        displayName: 'Contractor User',
-        roleLabel: 'View-Only (Contractor)',
+        username: 'User',
+        password: 'User123',
+        displayName: 'Client User',
+        roleLabel: 'User (View-Only)',
+        roleCode: 'contractor',
         canEdit: false,
         canDelete: false,
         canManageStorage: false,
+        canManageClients: false,
+        canEditForecast: false,
+        canDeleteForecast: false,
+        canEditOperations: false,
+        canDeleteOperations: false,
         allowedViews: ['dashboardView', 'forecastView', 'soundingView', 'topupView']
       }
     };
@@ -2516,15 +2598,56 @@
 
       const adminElements = document.querySelectorAll('.rbac-requires-admin');
       adminElements.forEach(el => {
-        if (currentUser.canManageStorage) {
+        if (currentUser.canManageStorage || currentUser.roleCode === 'admin') {
           el.classList.remove('hidden');
         } else {
           el.classList.add('hidden');
         }
       });
 
+      // Client Master List triggers (Admin only or canManageClients)
+      const clientTriggers = document.querySelectorAll('.openManageClientsModalTrigger');
+      clientTriggers.forEach(el => {
+        if (currentUser.roleCode === 'admin' || currentUser.canManageClients) {
+          el.classList.remove('hidden');
+          el.removeAttribute('disabled');
+        } else {
+          el.classList.add('hidden');
+          el.setAttribute('disabled', 'true');
+        }
+      });
+
+      // Forecast edit buttons (Admin & Planner)
+      const forecastButtons = document.querySelectorAll('#openNewForecastDispatchBtn, #openNewForecastTopupBtn, #saveShoreTankBaselineBtn, #saveShoreTankBaseDirectBtn');
+      forecastButtons.forEach(el => {
+        if (currentUser.canEditForecast) {
+          el.classList.remove('hidden');
+          el.removeAttribute('disabled');
+        } else {
+          el.classList.add('hidden');
+          el.setAttribute('disabled', 'true');
+        }
+      });
+
+      // Operational edit buttons (Admin & Fuel Coordinator)
+      const opsButtons = document.querySelectorAll('#quickDashboardTopupBtn, #quickDashboardDispatchBtn, #quickOpeningRobBtn, #cardEditOpeningRobBtn, #openBulkImportBtn, #openNewDispatchModalBtn, #openNewSoundingModalBtn, #openNewTopupModalBtn');
+      opsButtons.forEach(el => {
+        if (currentUser.canEditOperations) {
+          el.classList.remove('hidden');
+          el.removeAttribute('disabled');
+        } else {
+          el.classList.add('hidden');
+          el.setAttribute('disabled', 'true');
+        }
+      });
+
       const editElements = document.querySelectorAll('.rbac-requires-edit');
       editElements.forEach(el => {
+        if (el.matches('#openNewForecastDispatchBtn, #openNewForecastTopupBtn, #saveShoreTankBaselineBtn, #saveShoreTankBaseDirectBtn') ||
+            el.matches('#quickDashboardTopupBtn, #quickDashboardDispatchBtn, #quickOpeningRobBtn, #cardEditOpeningRobBtn, #openBulkImportBtn, #openNewDispatchModalBtn, #openNewSoundingModalBtn, #openNewTopupModalBtn') ||
+            el.matches('.openManageClientsModalTrigger')) {
+          return; // Handled by specific granular checks above
+        }
         if (currentUser.canEdit) {
           el.classList.remove('hidden');
           el.removeAttribute('disabled');
@@ -2912,10 +3035,10 @@
         const flowRate = calculateFlowRate(item.volume, item.startTime, item.endTime);
 
         let actionButtons = '';
-        if (currentUser && currentUser.canEdit) {
+        if (currentUser && currentUser.canEditOperations) {
           actionButtons += `<button data-id="${item.id}" class="edit-dispatch-btn text-sky-600 hover:text-sky-800 p-1 mr-1" title="Edit Log"><i class="fa-solid fa-pen-to-square"></i></button>`;
         }
-        if (currentUser && currentUser.canDelete) {
+        if (currentUser && currentUser.canDeleteOperations) {
           actionButtons += `<button data-id="${item.id}" class="delete-dispatch-btn text-rose-600 hover:text-rose-800 p-1" title="Delete Log"><i class="fa-solid fa-trash-can"></i></button>`;
         }
         if (!actionButtons) {
@@ -3008,10 +3131,10 @@
         }
 
         let actionButtons = '';
-        if (currentUser && currentUser.canEdit) {
+        if (currentUser && currentUser.canEditOperations) {
           actionButtons += `<button data-id="${item.id}" class="edit-sounding-btn text-sky-600 hover:text-sky-800 p-1 mr-1" title="Edit Sounding"><i class="fa-solid fa-pen-to-square"></i></button>`;
         }
-        if (currentUser && currentUser.canDelete) {
+        if (currentUser && currentUser.canDeleteOperations) {
           actionButtons += `<button data-id="${item.id}" class="delete-sounding-btn text-rose-600 hover:text-rose-800 p-1" title="Delete Sounding"><i class="fa-solid fa-trash-can"></i></button>`;
         }
         if (!actionButtons) {
@@ -3065,7 +3188,7 @@
         let receiveButton = '';
         if (item.status === 'Completed') {
           receiveButton = '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700"><i class="fa-solid fa-circle-check"></i> In Storage</span>';
-        } else if (currentUser && currentUser.canEdit) {
+        } else if (currentUser && currentUser.canEditOperations) {
           receiveButton = `
             <button data-id="${item.id}" class="receive-topup-btn px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] shadow-xs transition">
               <i class="fa-solid fa-arrow-down mr-1"></i> Receive Top Up
@@ -3076,10 +3199,10 @@
         }
 
         let actionButtons = '';
-        if (currentUser && currentUser.canEdit) {
+        if (currentUser && currentUser.canEditOperations) {
           actionButtons += `<button data-id="${item.id}" class="edit-topup-btn text-sky-600 hover:text-sky-800 p-1 mr-1" title="Edit Voyage"><i class="fa-solid fa-pen-to-square"></i></button>`;
         }
-        if (currentUser && currentUser.canDelete) {
+        if (currentUser && currentUser.canDeleteOperations) {
           actionButtons += `<button data-id="${item.id}" class="delete-topup-btn text-rose-600 hover:text-rose-800 p-1" title="Delete Voyage"><i class="fa-solid fa-trash-can"></i></button>`;
         }
         if (!actionButtons) {
@@ -3624,7 +3747,7 @@
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50';
             let delBtn = '';
-            if (currentUser && currentUser.canEdit) {
+            if (currentUser && currentUser.canDeleteForecast) {
               delBtn = `<button data-id="${d.id}" class="delete-fc-dispatch-btn text-rose-500 hover:text-rose-700 p-1" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`;
             }
             tr.innerHTML = `
@@ -3654,7 +3777,7 @@
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50';
             let delBtn = '';
-            if (currentUser && currentUser.canEdit) {
+            if (currentUser && currentUser.canDeleteForecast) {
               delBtn = `<button data-id="${t.id}" class="delete-fc-topup-btn text-rose-500 hover:text-rose-700 p-1" title="Delete"><i class="fa-solid fa-trash-can"></i></button>`;
             }
 
@@ -3960,7 +4083,7 @@
       const directBaseInput = document.getElementById('directShoreTankBaseInput');
       if (saveDirectBaseBtn && directBaseInput) {
         saveDirectBaseBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditForecast) return;
           const val = Number(directBaseInput.value) || 0;
           appState.storageConfig.shoreTankInitialRob = val;
           saveState();
@@ -3992,7 +4115,7 @@
       const quickShoreBaseInput = document.getElementById('quickShoreTankBaselineInput');
       if (saveShoreBaseBtn && quickShoreBaseInput) {
         saveShoreBaseBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditForecast) return;
           const val = Number(quickShoreBaseInput.value) || 0;
           appState.storageConfig.shoreTankInitialRob = val;
           saveState();
@@ -4006,7 +4129,7 @@
       const fcDispatchModal = document.getElementById('forecastDispatchModal');
       if (openFcDispatchBtn && fcDispatchModal) {
         openFcDispatchBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditForecast) return;
           document.getElementById('forecastDispatchForm').reset();
           document.getElementById('fcDispatchEditId').value = '';
           document.getElementById('forecastDispatchModalTitle').textContent = `Add Distribution Plan (${appState.storageConfig.vesselName || 'SPOB TRANS BILGIT'})`;
@@ -4021,7 +4144,7 @@
       const fcTopupModal = document.getElementById('forecastTopupModal');
       if (openFcTopupBtn && fcTopupModal) {
         openFcTopupBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditForecast) return;
           document.getElementById('forecastTopupForm').reset();
           document.getElementById('fcTopupEditId').value = '';
           document.getElementById('forecastTopupModalTitle').textContent = 'Add Top-Up Plan (Dual Storage)';
@@ -4058,7 +4181,7 @@
       if (fcDispatchForm) {
         fcDispatchForm.addEventListener('submit', (e) => {
           e.preventDefault();
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditForecast) return;
 
           const editId = document.getElementById('fcDispatchEditId').value;
           const clientName = document.getElementById('fcDispatchClient').value.trim().toUpperCase();
@@ -4092,7 +4215,7 @@
       if (fcTopupForm) {
         fcTopupForm.addEventListener('submit', (e) => {
           e.preventDefault();
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditForecast) return;
 
           const editId = document.getElementById('fcTopupEditId').value;
           const opt = document.getElementById('fcTopupTargetOption').value;
@@ -4141,8 +4264,21 @@
       const recordManageAddAnotherBtn = document.getElementById('recordManageAddAnotherBtn');
 
       function openRecordManageModal(type, id, date, clientHint) {
-        if (!currentUser || !currentUser.canEdit) return;
+        if (!currentUser || !currentUser.canEditForecast) return;
         activeManageRecord = { type, id, date, clientHint };
+
+        if (recordManageEditBtn) {
+          if (currentUser.canEditForecast) recordManageEditBtn.classList.remove('hidden');
+          else recordManageEditBtn.classList.add('hidden');
+        }
+        if (recordManageAddAnotherBtn) {
+          if (currentUser.canEditForecast) recordManageAddAnotherBtn.classList.remove('hidden');
+          else recordManageAddAnotherBtn.classList.add('hidden');
+        }
+        if (recordManageDeleteBtn) {
+          if (currentUser.canDeleteForecast) recordManageDeleteBtn.classList.remove('hidden');
+          else recordManageDeleteBtn.classList.add('hidden');
+        }
 
         const titleEl = document.getElementById('recordManageModalTitle');
         const subEl = document.getElementById('recordManageModalSubtitle');
@@ -4176,7 +4312,7 @@
 
       if (recordManageEditBtn) {
         recordManageEditBtn.addEventListener('click', () => {
-          if (!activeManageRecord) return;
+          if (!activeManageRecord || !currentUser || !currentUser.canEditForecast) return;
           recordManageModal.classList.add('hidden');
 
           if (activeManageRecord.type === 'dispatch') {
@@ -4221,7 +4357,7 @@
 
       if (recordManageDeleteBtn) {
         recordManageDeleteBtn.addEventListener('click', () => {
-          if (!activeManageRecord) return;
+          if (!activeManageRecord || !currentUser || !currentUser.canDeleteForecast) return;
           const { type, id, date } = activeManageRecord;
 
           showConfirmModal(
@@ -4246,7 +4382,7 @@
 
       if (recordManageAddAnotherBtn) {
         recordManageAddAnotherBtn.addEventListener('click', () => {
-          if (!activeManageRecord) return;
+          if (!activeManageRecord || !currentUser || !currentUser.canEditForecast) return;
           const { type, date, clientHint } = activeManageRecord;
           recordManageModal.classList.add('hidden');
 
@@ -4273,7 +4409,7 @@
       const chooserBtnTopup = document.getElementById('chooserBtnTopup');
 
       function openFloatingChooser(date, preselectedClient) {
-        if (!currentUser || !currentUser.canEdit) return;
+        if (!currentUser || !currentUser.canEditForecast) return;
         selectedChooserDate = date;
         const defaultClient = (appState.clients && appState.clients[0] && appState.clients[0].name) || 'JGC';
         selectedChooserClient = preselectedClient || defaultClient;
@@ -4315,7 +4451,7 @@
       if (floatingTable) {
         floatingTable.addEventListener('click', (e) => {
           const existingItem = e.target.closest('.fc-existing-item');
-          if (existingItem && currentUser && currentUser.canEdit) {
+          if (existingItem && currentUser && currentUser.canEditForecast) {
             e.stopPropagation();
             openRecordManageModal(
               existingItem.dataset.type,
@@ -4330,9 +4466,9 @@
           const matrixCell = e.target.closest('.fc-floating-cell');
           const defaultClient = (appState.clients && appState.clients[0] && appState.clients[0].name) || 'JGC';
 
-          if (colHeader && currentUser && currentUser.canEdit) {
+          if (colHeader && currentUser && currentUser.canEditForecast) {
             openFloatingChooser(colHeader.dataset.date, defaultClient);
-          } else if (matrixCell && currentUser && currentUser.canEdit) {
+          } else if (matrixCell && currentUser && currentUser.canEditForecast) {
             openFloatingChooser(matrixCell.dataset.date, matrixCell.dataset.client || defaultClient);
           }
         });
@@ -4343,7 +4479,7 @@
       if (shoreTable) {
         shoreTable.addEventListener('click', (e) => {
           const existingItem = e.target.closest('.fc-existing-item');
-          if (existingItem && currentUser && currentUser.canEdit) {
+          if (existingItem && currentUser && currentUser.canEditForecast) {
             e.stopPropagation();
             openRecordManageModal(
               existingItem.dataset.type,
@@ -4357,7 +4493,7 @@
           const dateCol = e.target.closest('.fc-shore-date-col');
           const topupCell = e.target.closest('.fc-shore-topup-cell');
 
-          if ((dateCol || topupCell) && currentUser && currentUser.canEdit) {
+          if ((dateCol || topupCell) && currentUser && currentUser.canEditForecast) {
             const date = (dateCol || topupCell).dataset.date;
             document.getElementById('forecastTopupForm').reset();
             document.getElementById('fcTopupEditId').value = '';
@@ -4376,7 +4512,7 @@
       if (fcDispatchListTbody) {
         fcDispatchListTbody.addEventListener('click', (e) => {
           const delBtn = e.target.closest('.delete-fc-dispatch-btn');
-          if (delBtn && currentUser && currentUser.canEdit) {
+          if (delBtn && currentUser && currentUser.canDeleteForecast) {
             const id = delBtn.dataset.id;
             showConfirmModal('Delete Distribution Plan', 'Remove this scheduled distribution plan?', () => {
               appState.forecastDispatches = appState.forecastDispatches.filter(d => d.id !== id);
@@ -4392,7 +4528,7 @@
       if (fcTopupListTbody) {
         fcTopupListTbody.addEventListener('click', (e) => {
           const delBtn = e.target.closest('.delete-fc-topup-btn');
-          if (delBtn && currentUser && currentUser.canEdit) {
+          if (delBtn && currentUser && currentUser.canDeleteForecast) {
             const id = delBtn.dataset.id;
             showConfirmModal('Delete Top-Up Plan', 'Remove this scheduled top-up plan? Dependent dynamic ROB will be recalculated.', () => {
               appState.forecastTopups = appState.forecastTopups.filter(t => t.id !== id);
@@ -4409,7 +4545,7 @@
       document.addEventListener('click', (e) => {
         const trigger = e.target.closest('.openManageClientsModalTrigger');
         if (trigger && clientManageModal) {
-          if (!currentUser || (!currentUser.canEdit && !currentUser.canReset)) {
+          if (!currentUser || (currentUser.roleCode !== 'admin' && !currentUser.canManageClients)) {
             showToast('Access Denied: Only Operational Staff or Admin can manage clients.', 'error');
             return;
           }
@@ -4548,6 +4684,37 @@
         });
       }
 
+      // Show / Hide Password Visibility Toggles
+      const togglePageLoginBtn = document.getElementById('togglePageLoginPassword');
+      if (togglePageLoginBtn) {
+        togglePageLoginBtn.addEventListener('click', () => {
+          const input = document.getElementById('pageLoginPassword');
+          const icon = togglePageLoginBtn.querySelector('i');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fa-solid fa-eye-slash text-xs';
+          } else {
+            input.type = 'password';
+            icon.className = 'fa-solid fa-eye text-xs';
+          }
+        });
+      }
+
+      const toggleModalLoginBtn = document.getElementById('toggleLoginPassword');
+      if (toggleModalLoginBtn) {
+        toggleModalLoginBtn.addEventListener('click', () => {
+          const input = document.getElementById('loginPassword');
+          const icon = toggleModalLoginBtn.querySelector('i');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fa-solid fa-eye-slash text-xs';
+          } else {
+            input.type = 'password';
+            icon.className = 'fa-solid fa-eye text-xs';
+          }
+        });
+      }
+
       // Navigation Bar Click Handler
       document.querySelectorAll('#navContainer .nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -4605,7 +4772,7 @@
       // Quick Edit Initial Opening ROB Modal
       const quickOpeningRobModal = document.getElementById('quickOpeningRobModal');
       const openQuickRobHandler = () => {
-        if (!currentUser || !currentUser.canEdit) return;
+        if (!currentUser || !currentUser.canEditOperations) return;
         document.getElementById('quickOpeningRobInput').value = appState.storageConfig.initialOpeningRob;
         quickOpeningRobModal.classList.remove('hidden');
       };
@@ -4640,7 +4807,7 @@
       const quickDashboardTopupBtn = document.getElementById('quickDashboardTopupBtn');
       if (quickDashboardTopupBtn) {
         quickDashboardTopupBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
           const topupForm = document.getElementById('topupForm');
           if (topupForm) {
             topupForm.reset();
@@ -4660,7 +4827,7 @@
       const quickDashboardDispatchBtn = document.getElementById('quickDashboardDispatchBtn');
       if (quickDashboardDispatchBtn) {
         quickDashboardDispatchBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
           const dispatchForm = document.getElementById('dispatchForm');
           if (dispatchForm) {
             dispatchForm.reset();
@@ -4701,7 +4868,7 @@
       const newDispatchBtn = document.getElementById('openNewDispatchModalBtn');
       if (newDispatchBtn) {
         newDispatchBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
           document.getElementById('dispatchForm').reset();
           document.getElementById('dispatchEditId').value = '';
           document.getElementById('dispatchModalTitle').textContent = 'New Bunker Dispatch Log';
@@ -4731,7 +4898,7 @@
       if (dispatchForm) {
         dispatchForm.addEventListener('submit', (e) => {
           e.preventDefault();
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
 
           const editId = document.getElementById('dispatchEditId').value;
           const record = {
@@ -4769,7 +4936,7 @@
           const editBtn = e.target.closest('.edit-dispatch-btn');
           const deleteBtn = e.target.closest('.delete-dispatch-btn');
 
-          if (editBtn && currentUser && currentUser.canEdit) {
+          if (editBtn && currentUser && currentUser.canEditOperations) {
             const id = editBtn.dataset.id;
             const item = appState.bunkerings.find(b => b.id === id);
             if (item) {
@@ -4788,7 +4955,7 @@
             }
           }
 
-          if (deleteBtn && currentUser && currentUser.canDelete) {
+          if (deleteBtn && currentUser && currentUser.canDeleteOperations) {
             const id = deleteBtn.dataset.id;
             showConfirmModal('Delete Bunker Dispatch', 'Permanently delete this bunker dispatch record?', () => {
               appState.bunkerings = appState.bunkerings.filter(b => b.id !== id);
@@ -4803,7 +4970,7 @@
       const openBulkImportBtn = document.getElementById('openBulkImportBtn');
       if (openBulkImportBtn) {
         openBulkImportBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
           document.getElementById('bulkImportModal').classList.remove('hidden');
         });
       }
@@ -4815,7 +4982,7 @@
       const newSoundingBtn = document.getElementById('openNewSoundingModalBtn');
       if (newSoundingBtn) {
         newSoundingBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
           document.getElementById('soundingForm').reset();
           document.getElementById('soundingEditId').value = '';
           document.getElementById('soundingModalTitle').textContent = 'Record Physical Tank Sounding';
@@ -4859,7 +5026,7 @@
       if (soundingForm) {
         soundingForm.addEventListener('submit', (e) => {
           e.preventDefault();
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
 
           const editId = document.getElementById('soundingEditId').value;
           const record = {
@@ -4894,7 +5061,7 @@
           const deleteBtn = e.target.closest('.delete-sounding-btn');
           const viewDocBtn = e.target.closest('.view-doc-btn');
 
-          if (editBtn && currentUser && currentUser.canEdit) {
+          if (editBtn && currentUser && currentUser.canEditOperations) {
             const id = editBtn.dataset.id;
             const item = appState.soundings.find(s => s.id === id);
             if (item) {
@@ -4916,7 +5083,7 @@
             }
           }
 
-          if (deleteBtn && currentUser && currentUser.canDelete) {
+          if (deleteBtn && currentUser && currentUser.canDeleteOperations) {
             const id = deleteBtn.dataset.id;
             showConfirmModal('Delete Sounding Record', 'Permanently delete this physical sounding record?', () => {
               appState.soundings = appState.soundings.filter(s => s.id !== id);
@@ -4959,7 +5126,7 @@
       const newTopupBtn = document.getElementById('openNewTopupModalBtn');
       if (newTopupBtn) {
         newTopupBtn.addEventListener('click', () => {
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
           document.getElementById('topupForm').reset();
           document.getElementById('topupEditId').value = '';
           document.getElementById('topupModalTitle').textContent = 'Add Inbound Cargo Voyage';
@@ -4974,7 +5141,7 @@
       if (topupForm) {
         topupForm.addEventListener('submit', (e) => {
           e.preventDefault();
-          if (!currentUser || !currentUser.canEdit) return;
+          if (!currentUser || !currentUser.canEditOperations) return;
 
           const editId = document.getElementById('topupEditId').value;
           const record = {
@@ -5011,7 +5178,7 @@
           const editBtn = e.target.closest('.edit-topup-btn');
           const deleteBtn = e.target.closest('.delete-topup-btn');
 
-          if (receiveBtn && currentUser && currentUser.canEdit) {
+          if (receiveBtn && currentUser && currentUser.canEditOperations) {
             const id = receiveBtn.dataset.id;
             const item = appState.topups.find(t => t.id === id);
             if (item) {
@@ -5029,7 +5196,7 @@
             }
           }
 
-          if (editBtn && currentUser && currentUser.canEdit) {
+          if (editBtn && currentUser && currentUser.canEditOperations) {
             const id = editBtn.dataset.id;
             const item = appState.topups.find(t => t.id === id);
             if (item) {
@@ -5048,7 +5215,7 @@
             }
           }
 
-          if (deleteBtn && currentUser && currentUser.canDelete) {
+          if (deleteBtn && currentUser && currentUser.canDeleteOperations) {
             const id = deleteBtn.dataset.id;
             showConfirmModal('Delete Top-Up Voyage', 'Permanently remove this cargo replenishment record?', () => {
               appState.topups = appState.topups.filter(t => t.id !== id);
