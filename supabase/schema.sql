@@ -638,6 +638,44 @@ CREATE POLICY "Allow public read fuel_price_history"
   USING (true);
 
 -- =============================================================================
+-- 12.1 PERTAMINA PURCHASE RATE PERIODS: public.fuel_price_periods
+-- Mendukung 2 periode dalam sebulan: Periode I (1-14) & Periode II (15-akhir)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.fuel_price_periods (
+  id TEXT PRIMARY KEY,
+  year INT NOT NULL,
+  month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+  period TEXT NOT NULL CHECK (period IN ('Periode I', 'Periode II')),
+  start_date TEXT NOT NULL,
+  end_date TEXT NOT NULL,
+  price_per_liter NUMERIC NOT NULL DEFAULT 0 CHECK (price_per_liter >= 0),
+  currency TEXT NOT NULL DEFAULT 'IDR',
+  fuel_type TEXT NOT NULL DEFAULT 'Biofuel B50',
+  notes TEXT NULL DEFAULT '',
+  updated_by TEXT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_year_month_period UNIQUE (year, month, period)
+);
+
+ALTER TABLE public.fuel_price_periods ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read fuel_price_periods" ON public.fuel_price_periods;
+CREATE POLICY "Allow public read fuel_price_periods"
+  ON public.fuel_price_periods
+  FOR SELECT
+  TO public
+  USING (true);
+
+DROP POLICY IF EXISTS "Allow public write fuel_price_periods" ON public.fuel_price_periods;
+CREATE POLICY "Allow public write fuel_price_periods"
+  ON public.fuel_price_periods
+  FOR ALL
+  TO public
+  USING (true)
+  WITH CHECK (true);
+
+-- =============================================================================
 -- 13. REAL-TIME INVENTORY RECONCILIATION VIEW: public.v_inventory_reconciliation
 -- Computes Book ROB, Usable ROB, Latest Sounding, and Variance directly in SQL
 -- =============================================================================
@@ -798,6 +836,7 @@ DECLARE
   v_topups JSONB;
   v_forecast_dispatches JSONB;
   v_forecast_topups JSONB;
+  v_fuel_price_periods JSONB;
 BEGIN
   SELECT jsonb_build_object(
     'vesselName', vessel_name,
@@ -922,6 +961,29 @@ BEGIN
   INTO v_forecast_topups
   FROM public.forecast_topups;
 
+  SELECT COALESCE(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', id,
+        'year', year,
+        'month', month,
+        'period', period,
+        'startDate', start_date,
+        'endDate', end_date,
+        'pricePerLiter', price_per_liter,
+        'currency', currency,
+        'fuelType', fuel_type,
+        'notes', COALESCE(notes, ''),
+        'updatedBy', COALESCE(updated_by, ''),
+        'updatedAt', to_char(updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+      )
+      ORDER BY start_date DESC
+    ),
+    '[]'::JSONB
+  )
+  INTO v_fuel_price_periods
+  FROM public.fuel_price_periods;
+
   RETURN jsonb_build_object(
     'storageConfig', COALESCE(v_storage_config, jsonb_build_object(
       'vesselName', 'SPOB TRANS BILGIT',
@@ -968,7 +1030,8 @@ BEGIN
         'updatedBy', '',
         'updatedAt', ''
       )
-    )
+    ),
+    'fuelPricePeriods', v_fuel_price_periods
   );
 END;
 $$;
@@ -1171,6 +1234,51 @@ BEGIN
         NOW()
       );
     END IF;
+  END IF;
+
+  -- 8.1 Sync fuel_price_periods table
+  IF p_state->'fuelPricePeriods' IS NOT NULL AND jsonb_typeof(p_state->'fuelPricePeriods') = 'array' THEN
+    DELETE FROM public.fuel_price_periods WHERE true;
+    INSERT INTO public.fuel_price_periods (
+      id,
+      year,
+      month,
+      period,
+      start_date,
+      end_date,
+      price_per_liter,
+      currency,
+      fuel_type,
+      notes,
+      updated_by,
+      updated_at
+    )
+    SELECT
+      COALESCE(item->>'id', 'rate_' || (item->>'year') || '_' || (item->>'month') || '_' || (item->>'period')),
+      COALESCE((item->>'year')::INT, EXTRACT(YEAR FROM CURRENT_DATE)::INT),
+      COALESCE((item->>'month')::INT, 1),
+      COALESCE(item->>'period', 'Periode I'),
+      COALESCE(item->>'startDate', ''),
+      COALESCE(item->>'endDate', ''),
+      COALESCE((item->>'pricePerLiter')::NUMERIC, 0),
+      COALESCE(item->>'currency', 'IDR'),
+      COALESCE(item->>'fuelType', 'Biofuel B50'),
+      COALESCE(item->>'notes', ''),
+      COALESCE(item->>'updatedBy', ''),
+      NOW()
+    FROM jsonb_array_elements(p_state->'fuelPricePeriods') AS item
+    ON CONFLICT (id) DO UPDATE SET
+      year = EXCLUDED.year,
+      month = EXCLUDED.month,
+      period = EXCLUDED.period,
+      start_date = EXCLUDED.start_date,
+      end_date = EXCLUDED.end_date,
+      price_per_liter = EXCLUDED.price_per_liter,
+      currency = EXCLUDED.currency,
+      fuel_type = EXCLUDED.fuel_type,
+      notes = EXCLUDED.notes,
+      updated_by = EXCLUDED.updated_by,
+      updated_at = NOW();
   END IF;
 
   -- 9. Also update operational_state snapshot

@@ -1,6 +1,12 @@
-import { AppOperationalState, FuelPriceRecord } from '../models/Inventory';
+import {
+  AppOperationalState,
+  FuelPricePeriodRecord,
+  FuelPriceRecord,
+  PertaminaPeriodType,
+} from '../models/Inventory';
 import { ClientRecord, resolveClientColorStyle } from '../models/Client';
 import { DEFAULT_STORAGE_CONFIG } from '../models/StorageConfig';
+import { generatePeriodId, getPeriodDateRange } from '../utils/periodUtils';
 
 export const DEFAULT_FUEL_PRICE: FuelPriceRecord = {
   id: 'current',
@@ -28,6 +34,7 @@ export function createCleanInitialState(): AppOperationalState {
     forecastTopups: [],
     shoreTankDailyRobs: {},
     fuelPrice: { ...DEFAULT_FUEL_PRICE },
+    fuelPricePeriods: [],
   };
 }
 
@@ -102,6 +109,33 @@ export function sanitizeOperationalState(
     ).trim(),
   };
 
+  const rawPeriods = Array.isArray(raw.fuelPricePeriods)
+    ? raw.fuelPricePeriods
+    : [];
+  const fuelPricePeriods: FuelPricePeriodRecord[] = rawPeriods
+    .filter((p) => p && typeof p === 'object')
+    .map((p) => {
+      const year = Number(p.year) || new Date().getFullYear();
+      const month = Math.max(1, Math.min(12, Number(p.month) || 1));
+      const period: PertaminaPeriodType =
+        p.period === 'Periode II' ? 'Periode II' : 'Periode I';
+      const range = getPeriodDateRange(year, month, period);
+      return {
+        id: String(p.id || generatePeriodId(year, month, period)),
+        year,
+        month,
+        period,
+        startDate: String(p.startDate || range.startDate).trim(),
+        endDate: String(p.endDate || range.endDate).trim(),
+        pricePerLiter: Math.max(0, Number(p.pricePerLiter) || 0),
+        currency: String(p.currency || 'IDR').trim().toUpperCase(),
+        fuelType: String(p.fuelType || 'Biofuel B50').trim(),
+        notes: String(p.notes || '').trim(),
+        updatedBy: String(p.updatedBy || '').trim(),
+        updatedAt: String(p.updatedAt || '').trim(),
+      };
+    });
+
   // Ensure any contractor/client referenced in bunkerings or forecastDispatches is registered in clients
   const referencedNames = new Set<string>();
   bunkerings.forEach((b) => {
@@ -144,5 +178,6 @@ export function sanitizeOperationalState(
     forecastTopups,
     shoreTankDailyRobs,
     fuelPrice,
+    fuelPricePeriods,
   };
 }

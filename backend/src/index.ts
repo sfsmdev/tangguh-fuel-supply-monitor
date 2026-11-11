@@ -10,4 +10,5 @@ export * from './services/AuthService';
 export * from './db/seed';
 export * from './db/SupabaseProvider';
 export * from './db/DatabaseAdapter';
+export * from './utils/periodUtils';
 

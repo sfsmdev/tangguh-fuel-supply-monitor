@@ -59,11 +59,28 @@ export interface FuelPriceRecord {
   id?: string;
   pricePerLiter: number;
   currency: string; // e.g. 'IDR'
-  fuelType: string; // e.g. 'Biofuel B50 Marine Offshore'
+  fuelType: string; // e.g. 'Biofuel B50'
   effectiveDate: string; // YYYY-MM-DD
   notes?: string;
   updatedBy: string; // 'Admin'
   updatedAt: string; // ISO string
+}
+
+export type PertaminaPeriodType = 'Periode I' | 'Periode II';
+
+export interface FuelPricePeriodRecord {
+  id: string; // 'rate_YYYY_MM_P1' | 'rate_YYYY_MM_P2' | UUID
+  year: number; // e.g. 2026
+  month: number; // 1 - 12
+  period: PertaminaPeriodType; // 'Periode I' (1-14) | 'Periode II' (15-end)
+  startDate: string; // YYYY-MM-DD (e.g. '2026-11-01')
+  endDate: string; // YYYY-MM-DD (e.g. '2026-11-14')
+  pricePerLiter: number; // 0 if not yet inputted
+  currency: string; // 'IDR' | 'USD'
+  fuelType: string; // 'Biofuel B50'
+  notes?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface AppOperationalState {
@@ -76,5 +93,6 @@ export interface AppOperationalState {
   forecastTopups: ForecastTopup[];
   shoreTankDailyRobs: Record<string, number>;
   fuelPrice?: FuelPriceRecord;
+  fuelPricePeriods?: FuelPricePeriodRecord[];
 }
 

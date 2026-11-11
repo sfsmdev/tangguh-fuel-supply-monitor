@@ -11,8 +11,12 @@ import {
   ForecastDispatch,
   ForecastTopup,
   formatNumber,
+  FuelPricePeriodRecord,
   FuelPriceRecord,
+  generatePeriodId,
+  getPeriodDateRange,
   InventoryService,
+  PertaminaPeriodType,
   sanitizeOperationalState,
   SoundingRecord,
   StorageConfig,
@@ -227,6 +231,15 @@ interface AppStore {
 
   updateStorageConfig: (updates: Partial<StorageConfig>) => void;
   updateFuelPrice: (updates: Partial<FuelPriceRecord>) => void;
+  updateFuelPricePeriod: (params: {
+    year: number;
+    month: number;
+    period: PertaminaPeriodType;
+    pricePerLiter: number;
+    currency?: string;
+    fuelType?: string;
+    notes?: string;
+  }) => void;
   restoreFullState: (rawState: Partial<AppOperationalState>) => void;
   resetAllData: () => void;
 }
@@ -1121,6 +1134,69 @@ export const useAppStore = create<AppStore>((set, get) => ({
     };
     get().persistState(nextState);
     get().showToast('Fuel benchmark price updated successfully.', 'success');
+  },
+
+  updateFuelPricePeriod: (params) => {
+    const user = get().currentUser;
+    if (!user || user.roleCode !== 'admin') {
+      get().showToast(
+        'Permission denied: Only Administrator can update the Pertamina Purchase Rate.',
+        'error'
+      );
+      return;
+    }
+    const { year, month, period, pricePerLiter, currency, fuelType, notes } =
+      params;
+    const periodId = generatePeriodId(year, month, period);
+    const range = getPeriodDateRange(year, month, period);
+    const existingPeriods = get().state.fuelPricePeriods || [];
+
+    const nowIso = new Date().toISOString();
+    const updatedRecord: FuelPricePeriodRecord = {
+      id: periodId,
+      year,
+      month,
+      period,
+      startDate: range.startDate,
+      endDate: range.endDate,
+      pricePerLiter: Math.max(0, Number(pricePerLiter) || 0),
+      currency: (currency || 'IDR').trim().toUpperCase(),
+      fuelType: (fuelType || 'Biofuel B50').trim(),
+      notes: (notes || '').trim(),
+      updatedBy: user.displayName || user.username || 'Admin',
+      updatedAt: nowIso,
+    };
+
+    const nextPeriods = existingPeriods.filter((p) => p.id !== periodId);
+    nextPeriods.push(updatedRecord);
+    nextPeriods.sort((a, b) => b.startDate.localeCompare(a.startDate));
+
+    const todayStr = nowIso.slice(0, 10);
+    const isCurrentPeriod =
+      todayStr >= range.startDate && todayStr <= range.endDate;
+
+    const nextState: AppOperationalState = {
+      ...get().state,
+      fuelPricePeriods: nextPeriods,
+      fuelPrice: isCurrentPeriod
+        ? {
+            id: 'current',
+            pricePerLiter: updatedRecord.pricePerLiter,
+            currency: updatedRecord.currency,
+            fuelType: updatedRecord.fuelType,
+            effectiveDate: updatedRecord.startDate,
+            notes: updatedRecord.notes,
+            updatedBy: updatedRecord.updatedBy || 'Admin',
+            updatedAt: updatedRecord.updatedAt || nowIso,
+          }
+        : get().state.fuelPrice,
+    };
+
+    get().persistState(nextState);
+    get().showToast(
+      `Pertamina Purchase Rate (${period} ${range.startDate} - ${range.endDate}) saved successfully.`,
+      'success'
+    );
   },
 
   restoreFullState: (rawState) => {

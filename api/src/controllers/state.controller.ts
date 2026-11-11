@@ -22,7 +22,9 @@ export class StateController {
       const next = sanitizeOperationalState(nextState);
 
       const fuelPriceChanged =
-        JSON.stringify(prev.fuelPrice) !== JSON.stringify(next.fuelPrice);
+        JSON.stringify(prev.fuelPrice) !== JSON.stringify(next.fuelPrice) ||
+        JSON.stringify(prev.fuelPricePeriods) !==
+          JSON.stringify(next.fuelPricePeriods);
 
       if (fuelPriceChanged) {
         throw new Error(

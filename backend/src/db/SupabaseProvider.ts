@@ -300,6 +300,23 @@ async function syncRelationalTablesRest(
             ]
           : [],
       },
+      {
+        table: 'fuel_price_periods',
+        rows: (state.fuelPricePeriods || []).map((p) => ({
+          id: p.id,
+          year: p.year,
+          month: p.month,
+          period: p.period,
+          start_date: p.startDate,
+          end_date: p.endDate,
+          price_per_liter: Math.max(0, Number(p.pricePerLiter) || 0),
+          currency: p.currency || 'IDR',
+          fuel_type: p.fuelType || 'Biofuel B50',
+          notes: p.notes || '',
+          updated_by: p.updatedBy || '',
+          updated_at: p.updatedAt || new Date().toISOString(),
+        })),
+      },
     ];
 
     for (const spec of specs) {
