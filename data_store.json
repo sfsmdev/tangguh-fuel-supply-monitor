@@ -13,5 +13,15 @@
   "topups": [],
   "forecastDispatches": [],
   "forecastTopups": [],
-  "shoreTankDailyRobs": {}
+  "shoreTankDailyRobs": {},
+  "fuelPrice": {
+    "id": "current",
+    "pricePerLiter": 0,
+    "currency": "IDR",
+    "fuelType": "Biofuel B50",
+    "effectiveDate": "",
+    "notes": "",
+    "updatedBy": "",
+    "updatedAt": ""
+  }
 }

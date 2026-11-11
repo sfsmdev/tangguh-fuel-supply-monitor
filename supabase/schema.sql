@@ -532,12 +532,12 @@ CREATE POLICY "Allow operational state read/write"
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.fuel_prices (
   id TEXT PRIMARY KEY DEFAULT 'current',
-  price_per_liter NUMERIC NOT NULL DEFAULT 18500 CHECK (price_per_liter >= 0),
+  price_per_liter NUMERIC NOT NULL DEFAULT 0 CHECK (price_per_liter >= 0),
   currency TEXT NOT NULL DEFAULT 'IDR',
-  fuel_type TEXT NOT NULL DEFAULT 'Biofuel B50 Marine Offshore',
-  effective_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  notes TEXT NULL DEFAULT 'Official Marine Fuel Supply Benchmark',
-  updated_by TEXT NOT NULL DEFAULT 'Admin',
+  fuel_type TEXT NOT NULL DEFAULT 'Biofuel B50',
+  effective_date TEXT NULL,
+  notes TEXT NULL DEFAULT '',
+  updated_by TEXT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -571,12 +571,12 @@ INSERT INTO public.fuel_prices (
 )
 VALUES (
   'current',
-  18500,
+  0,
   'IDR',
-  'Biofuel B50 Marine Offshore',
-  CURRENT_DATE,
-  'Official Marine Fuel Supply Benchmark',
-  'Admin',
+  'Biofuel B50',
+  '',
+  '',
+  '',
   NOW()
 )
 ON CONFLICT (id) DO NOTHING;
@@ -586,10 +586,10 @@ CREATE TABLE IF NOT EXISTS public.fuel_price_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   price_per_liter NUMERIC NOT NULL CHECK (price_per_liter >= 0),
   currency TEXT NOT NULL DEFAULT 'IDR',
-  fuel_type TEXT NOT NULL DEFAULT 'Biofuel B50 Marine Offshore',
-  effective_date DATE NOT NULL,
-  notes TEXT NULL,
-  updated_by TEXT NOT NULL,
+  fuel_type TEXT NOT NULL DEFAULT 'Biofuel B50',
+  effective_date TEXT NULL,
+  notes TEXT NULL DEFAULT '',
+  updated_by TEXT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -913,9 +913,9 @@ BEGIN
           'pricePerLiter', price_per_liter,
           'currency', currency,
           'fuelType', fuel_type,
-          'effectiveDate', to_char(effective_date, 'YYYY-MM-DD'),
-          'notes', notes,
-          'updatedBy', updated_by,
+          'effectiveDate', COALESCE(effective_date, ''),
+          'notes', COALESCE(notes, ''),
+          'updatedBy', COALESCE(updated_by, ''),
           'updatedAt', to_char(updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
         )
         FROM public.fuel_prices
@@ -925,13 +925,13 @@ BEGIN
       (SELECT payload->'fuelPrice' FROM public.operational_state WHERE id = 'current' LIMIT 1),
       jsonb_build_object(
         'id', 'current',
-        'pricePerLiter', 18500,
+        'pricePerLiter', 0,
         'currency', 'IDR',
-        'fuelType', 'Biofuel B50 Marine Offshore',
-        'effectiveDate', to_char(CURRENT_DATE, 'YYYY-MM-DD'),
-        'notes', 'Official Marine Fuel Supply Benchmark',
-        'updatedBy', 'Admin',
-        'updatedAt', to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+        'fuelType', 'Biofuel B50',
+        'effectiveDate', '',
+        'notes', '',
+        'updatedBy', '',
+        'updatedAt', ''
       )
     )
   );
@@ -1098,12 +1098,12 @@ BEGIN
     )
     VALUES (
       'current',
-      COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 18500),
+      COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 0),
       COALESCE(p_state->'fuelPrice'->>'currency', 'IDR'),
-      COALESCE(p_state->'fuelPrice'->>'fuelType', 'Biofuel B50 Marine Offshore'),
-      COALESCE((p_state->'fuelPrice'->>'effectiveDate')::DATE, CURRENT_DATE),
-      COALESCE(p_state->'fuelPrice'->>'notes', 'Official Marine Fuel Supply Benchmark'),
-      COALESCE(p_state->'fuelPrice'->>'updatedBy', 'Admin'),
+      COALESCE(p_state->'fuelPrice'->>'fuelType', 'Biofuel B50'),
+      COALESCE(p_state->'fuelPrice'->>'effectiveDate', ''),
+      COALESCE(p_state->'fuelPrice'->>'notes', ''),
+      COALESCE(p_state->'fuelPrice'->>'updatedBy', ''),
       NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
@@ -1115,24 +1115,27 @@ BEGIN
       updated_by = EXCLUDED.updated_by,
       updated_at = NOW();
 
-    INSERT INTO public.fuel_price_history (
-      price_per_liter,
-      currency,
-      fuel_type,
-      effective_date,
-      notes,
-      updated_by,
-      created_at
-    )
-    VALUES (
-      COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 18500),
-      COALESCE(p_state->'fuelPrice'->>'currency', 'IDR'),
-      COALESCE(p_state->'fuelPrice'->>'fuelType', 'Biofuel B50 Marine Offshore'),
-      COALESCE((p_state->'fuelPrice'->>'effectiveDate')::DATE, CURRENT_DATE),
-      COALESCE(p_state->'fuelPrice'->>'notes', 'Official Marine Fuel Supply Benchmark'),
-      COALESCE(p_state->'fuelPrice'->>'updatedBy', 'Admin'),
-      NOW()
-    );
+    -- Log history only if a valid price was provided
+    IF COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 0) > 0 OR COALESCE(p_state->'fuelPrice'->>'updatedBy', '') <> '' THEN
+      INSERT INTO public.fuel_price_history (
+        price_per_liter,
+        currency,
+        fuel_type,
+        effective_date,
+        notes,
+        updated_by,
+        created_at
+      )
+      VALUES (
+        COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 0),
+        COALESCE(p_state->'fuelPrice'->>'currency', 'IDR'),
+        COALESCE(p_state->'fuelPrice'->>'fuelType', 'Biofuel B50'),
+        COALESCE(p_state->'fuelPrice'->>'effectiveDate', ''),
+        COALESCE(p_state->'fuelPrice'->>'notes', ''),
+        COALESCE(p_state->'fuelPrice'->>'updatedBy', 'Admin'),
+        NOW()
+      );
+    END IF;
   END IF;
 
   -- 9. Also update operational_state snapshot

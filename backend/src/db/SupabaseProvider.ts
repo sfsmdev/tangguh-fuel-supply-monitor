@@ -285,17 +285,17 @@ async function syncRelationalTablesRest(
           ? [
               {
                 id: 'current',
-                price_per_liter: Number(state.fuelPrice.pricePerLiter) || 18500,
+                price_per_liter: Math.max(
+                  0,
+                  Number(state.fuelPrice.pricePerLiter) || 0
+                ),
                 currency: state.fuelPrice.currency || 'IDR',
-                fuel_type: state.fuelPrice.fuelType || 'Biofuel B50 Marine Offshore',
-                effective_date:
-                  state.fuelPrice.effectiveDate ||
-                  new Date().toISOString().slice(0, 10),
-                notes:
-                  state.fuelPrice.notes ||
-                  'Official Marine Fuel Supply Benchmark',
-                updated_by: state.fuelPrice.updatedBy || 'Admin',
-                updated_at: state.fuelPrice.updatedAt || new Date().toISOString(),
+                fuel_type: state.fuelPrice.fuelType || 'Biofuel B50',
+                effective_date: state.fuelPrice.effectiveDate || null,
+                notes: state.fuelPrice.notes || '',
+                updated_by: state.fuelPrice.updatedBy || '',
+                updated_at:
+                  state.fuelPrice.updatedAt || new Date().toISOString(),
               },
             ]
           : [],

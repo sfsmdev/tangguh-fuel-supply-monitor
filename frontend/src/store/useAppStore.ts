@@ -1093,13 +1093,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
     const currentPrice = get().state.fuelPrice || {
       id: 'current',
-      pricePerLiter: 18500,
+      pricePerLiter: 0,
       currency: 'IDR',
-      fuelType: 'Biofuel B50 Marine Offshore',
-      effectiveDate: new Date().toISOString().slice(0, 10),
-      notes: 'Official Marine Fuel Supply Benchmark',
-      updatedBy: 'Admin',
-      updatedAt: new Date().toISOString(),
+      fuelType: 'Biofuel B50',
+      effectiveDate: '',
+      notes: '',
+      updatedBy: '',
+      updatedAt: '',
     };
     const nextFuelPrice: FuelPriceRecord = {
       ...currentPrice,
@@ -1109,9 +1109,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
         Number(updates.pricePerLiter ?? currentPrice.pricePerLiter) || 0
       ),
       currency: updates.currency || currentPrice.currency || 'IDR',
-      fuelType:
-        updates.fuelType || currentPrice.fuelType || 'Biofuel B50 Marine Offshore',
-      effectiveDate: updates.effectiveDate || currentPrice.effectiveDate,
+      fuelType: updates.fuelType || currentPrice.fuelType || 'Biofuel B50',
+      effectiveDate: updates.effectiveDate ?? currentPrice.effectiveDate ?? '',
       notes: updates.notes !== undefined ? updates.notes : currentPrice.notes,
       updatedBy: user.displayName || user.username || 'Admin',
       updatedAt: new Date().toISOString(),

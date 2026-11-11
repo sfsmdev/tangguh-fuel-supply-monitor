@@ -10,13 +10,13 @@ import {
 } from '@backend/index';
 
 function formatTimestampWIT(isoString?: string): string {
-  if (!isoString) return '--';
+  if (!isoString || !isoString.trim()) return '-';
   try {
     const d = new Date(isoString);
     if (isNaN(d.getTime())) return isoString;
     const utc = d.getTime() + d.getTimezoneOffset() * 60000;
     const witDate = new Date(utc + 3600000 * 9);
-    return `${formatDateWIT(witDate)} • ${formatTimeWIT(witDate)}`;
+    return `${formatDateWIT(witDate)} • ${formatTimeWIT(witDate)} WIT`;
   } catch {
     return isoString;
   }
@@ -26,30 +26,31 @@ export function FuelPriceCard() {
   const { state, currentUser, updateFuelPrice } = useAppStore();
   const isAdmin = currentUser?.roleCode === 'admin';
 
-  const priceData: FuelPriceRecord = state.fuelPrice || {
-    id: 'current',
-    pricePerLiter: 18500,
-    currency: 'IDR',
-    fuelType: 'Biofuel B50 Marine Offshore',
-    effectiveDate: new Date().toISOString().slice(0, 10),
-    notes: 'Official Marine Fuel Supply Benchmark',
-    updatedBy: 'Admin',
-    updatedAt: new Date().toISOString(),
-  };
+  const rawPrice: FuelPriceRecord | undefined = state.fuelPrice;
+  const hasPrice = Boolean(rawPrice && Number(rawPrice.pricePerLiter) > 0);
+  const pricePerLiter = hasPrice ? Number(rawPrice?.pricePerLiter) : 0;
+  const currency = rawPrice?.currency || 'IDR';
+  const fuelType = rawPrice?.fuelType?.trim() || 'Biofuel B50';
+  const effectiveDate = rawPrice?.effectiveDate?.trim() || '';
+  const notes = rawPrice?.notes?.trim() || '';
+  const updatedAt = rawPrice?.updatedAt?.trim() || '';
+  const updatedBy = rawPrice?.updatedBy?.trim() || '';
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editPrice, setEditPrice] = useState(String(priceData.pricePerLiter));
-  const [editCurrency, setEditCurrency] = useState(priceData.currency || 'IDR');
-  const [editFuelType, setEditFuelType] = useState(priceData.fuelType || 'Biofuel B50 Marine Offshore');
-  const [editEffectiveDate, setEditEffectiveDate] = useState(priceData.effectiveDate || '');
-  const [editNotes, setEditNotes] = useState(priceData.notes || '');
+  const [editPrice, setEditPrice] = useState('');
+  const [editCurrency, setEditCurrency] = useState('IDR');
+  const [editFuelType, setEditFuelType] = useState('Biofuel B50');
+  const [editEffectiveDate, setEditEffectiveDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   const openModal = () => {
-    setEditPrice(String(priceData.pricePerLiter));
-    setEditCurrency(priceData.currency || 'IDR');
-    setEditFuelType(priceData.fuelType || 'Biofuel B50 Marine Offshore');
-    setEditEffectiveDate(priceData.effectiveDate || new Date().toISOString().slice(0, 10));
-    setEditNotes(priceData.notes || '');
+    setEditPrice(hasPrice ? String(pricePerLiter) : '');
+    setEditCurrency(currency);
+    setEditFuelType(fuelType);
+    setEditEffectiveDate(
+      effectiveDate || new Date().toISOString().slice(0, 10)
+    );
+    setEditNotes(notes);
     setIsEditModalOpen(true);
   };
 
@@ -60,8 +61,8 @@ export function FuelPriceCard() {
 
     updateFuelPrice({
       pricePerLiter: val,
-      currency: editCurrency.trim().toUpperCase(),
-      fuelType: editFuelType.trim(),
+      currency: editCurrency.trim().toUpperCase() || 'IDR',
+      fuelType: editFuelType.trim() || 'Biofuel B50',
       effectiveDate: editEffectiveDate,
       notes: editNotes.trim(),
     });
@@ -80,7 +81,11 @@ export function FuelPriceCard() {
           {/* Card Header */}
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  hasPrice ? 'bg-amber-500 animate-pulse' : 'bg-slate-300'
+                }`}
+              />
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                 Harga Acuan Minyak
               </h3>
@@ -104,30 +109,42 @@ export function FuelPriceCard() {
             )}
           </div>
 
-          {/* Fuel Type Subtitle */}
-          <div className="text-xs font-semibold text-slate-500 truncate mb-1.5">
-            {priceData.fuelType || 'Biofuel B50 Marine Offshore'}
+          {/* Fuel Type & Effective Date */}
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 truncate mb-1.5">
+            <span>{fuelType}</span>
+            {effectiveDate && (
+              <>
+                <span className="text-slate-300">•</span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  Per {effectiveDate}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Main Price Highlight */}
           <div className="flex items-baseline gap-1.5 mt-1">
             <span className="text-xs font-extrabold text-amber-600 font-mono">
-              {priceData.currency === 'IDR' ? 'Rp' : priceData.currency}
+              {currency === 'IDR' ? 'Rp' : currency}
             </span>
             <span className="text-2xl sm:text-3xl font-mono font-black text-slate-900 tracking-tight">
-              {formatNumber(priceData.pricePerLiter)}
+              {formatNumber(pricePerLiter)}
             </span>
             <span className="text-xs font-bold text-slate-500 font-mono">
               / Liter
             </span>
           </div>
 
-          {/* Notes or Period if present */}
-          {priceData.notes && (
+          {/* Notes or Status */}
+          {notes ? (
             <p className="text-[11px] text-slate-600 font-medium mt-1 line-clamp-1">
-              {priceData.notes}
+              {notes}
             </p>
-          )}
+          ) : !hasPrice ? (
+            <p className="text-[11px] text-slate-400 italic mt-1">
+              Belum ada data input harga
+            </p>
+          ) : null}
         </div>
 
         {/* Card Footer: Metadata & Timestamp WIT */}
@@ -136,15 +153,19 @@ export function FuelPriceCard() {
             <i className="fa-regular fa-clock text-slate-400 text-[10px]" />
             <span>Update:</span>
             <span className="font-mono font-semibold text-slate-700">
-              {formatTimestampWIT(priceData.updatedAt)}
+              {updatedAt ? formatTimestampWIT(updatedAt) : '-'}
             </span>
           </div>
 
           <div className="flex items-center gap-1 shrink-0 text-slate-500">
             <span>Oleh:</span>
-            <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.2 rounded text-[10px]">
-              {priceData.updatedBy || 'Admin'}
-            </span>
+            {updatedBy ? (
+              <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.2 rounded text-[10px]">
+                {updatedBy}
+              </span>
+            ) : (
+              <span className="text-slate-400 font-mono">-</span>
+            )}
           </div>
         </div>
       </div>
@@ -163,7 +184,7 @@ export function FuelPriceCard() {
                     Update Harga Acuan Minyak
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Khusus Administrator • Berlaku untuk seluruh sistem monitoring
+                    Khusus Administrator • Tersimpan langsung ke database
                   </p>
                 </div>
               </div>
@@ -203,7 +224,7 @@ export function FuelPriceCard() {
                     required
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
-                    placeholder="Contoh: 18500"
+                    placeholder="0"
                     className="w-full px-3 py-2 text-xs font-mono font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
@@ -229,7 +250,6 @@ export function FuelPriceCard() {
                 </label>
                 <input
                   type="date"
-                  required
                   value={editEffectiveDate}
                   onChange={(e) => setEditEffectiveDate(e.target.value)}
                   className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -244,7 +264,7 @@ export function FuelPriceCard() {
                   rows={2}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="Contoh: Official Pertamina Marine Fuel Benchmark Periode 01 - 15 Nov 2026"
+                  placeholder="Contoh: Official Pertamina Marine Fuel Benchmark"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
@@ -271,4 +291,3 @@ export function FuelPriceCard() {
     </>
   );
 }
-
