@@ -542,14 +542,17 @@ CREATE TABLE IF NOT EXISTS public.fuel_prices (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Migrate column to TEXT if table was previously created with DATE type
+-- Ensure existing table drops NOT NULL constraints and converts column to TEXT
 DO $$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'fuel_prices' AND column_name = 'effective_date' AND data_type != 'text'
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'fuel_prices'
   ) THEN
+    ALTER TABLE public.fuel_prices ALTER COLUMN effective_date DROP NOT NULL;
     ALTER TABLE public.fuel_prices ALTER COLUMN effective_date TYPE TEXT USING effective_date::TEXT;
+    ALTER TABLE public.fuel_prices ALTER COLUMN updated_by DROP NOT NULL;
+    ALTER TABLE public.fuel_prices ALTER COLUMN notes DROP NOT NULL;
   END IF;
 END $$;
 
@@ -569,6 +572,14 @@ CREATE POLICY "Allow public write fuel_prices"
   TO public
   USING (true)
   WITH CHECK (true);
+
+-- Reset leftover mock 18500 if present from prior runs
+UPDATE public.fuel_prices
+SET price_per_liter = 0,
+    effective_date = NULL,
+    notes = '',
+    updated_by = ''
+WHERE id = 'current' AND price_per_liter = 18500;
 
 INSERT INTO public.fuel_prices (
   id,
@@ -607,10 +618,13 @@ CREATE TABLE IF NOT EXISTS public.fuel_price_history (
 DO $$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'fuel_price_history' AND column_name = 'effective_date' AND data_type != 'text'
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'fuel_price_history'
   ) THEN
+    ALTER TABLE public.fuel_price_history ALTER COLUMN effective_date DROP NOT NULL;
     ALTER TABLE public.fuel_price_history ALTER COLUMN effective_date TYPE TEXT USING effective_date::TEXT;
+    ALTER TABLE public.fuel_price_history ALTER COLUMN updated_by DROP NOT NULL;
+    ALTER TABLE public.fuel_price_history ALTER COLUMN notes DROP NOT NULL;
   END IF;
 END $$;
 
