@@ -55,6 +55,17 @@ export interface ForecastTopup {
   shoreVolume: number; // Liters (L)
 }
 
+export interface FuelPriceRecord {
+  id?: string;
+  pricePerLiter: number;
+  currency: string; // e.g. 'IDR'
+  fuelType: string; // e.g. 'Biofuel B50 Marine Offshore'
+  effectiveDate: string; // YYYY-MM-DD
+  notes?: string;
+  updatedBy: string; // 'Admin'
+  updatedAt: string; // ISO string
+}
+
 export interface AppOperationalState {
   storageConfig: StorageConfig;
   clients: ClientRecord[]; // Clean empty array by default
@@ -64,5 +75,6 @@ export interface AppOperationalState {
   forecastDispatches: ForecastDispatch[];
   forecastTopups: ForecastTopup[];
   shoreTankDailyRobs: Record<string, number>;
+  fuelPrice?: FuelPriceRecord;
 }
 

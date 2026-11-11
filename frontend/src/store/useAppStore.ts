@@ -10,7 +10,8 @@ import {
   createCleanInitialState,
   ForecastDispatch,
   ForecastTopup,
-   formatNumber,
+  formatNumber,
+  FuelPriceRecord,
   InventoryService,
   sanitizeOperationalState,
   SoundingRecord,
@@ -225,6 +226,7 @@ interface AppStore {
   setShoreTankDailyRob: (dateIso: string, robLiters: number | null) => void;
 
   updateStorageConfig: (updates: Partial<StorageConfig>) => void;
+  updateFuelPrice: (updates: Partial<FuelPriceRecord>) => void;
   restoreFullState: (rawState: Partial<AppOperationalState>) => void;
   resetAllData: () => void;
 }
@@ -1078,6 +1080,48 @@ export const useAppStore = create<AppStore>((set, get) => ({
       'Storage configuration updated successfully.',
       'success'
     );
+  },
+
+  updateFuelPrice: (updates) => {
+    const user = get().currentUser;
+    if (!user || user.roleCode !== 'admin') {
+      get().showToast(
+        'Permission denied: Only Administrator can update the fuel benchmark price.',
+        'error'
+      );
+      return;
+    }
+    const currentPrice = get().state.fuelPrice || {
+      id: 'current',
+      pricePerLiter: 18500,
+      currency: 'IDR',
+      fuelType: 'Biofuel B50 Marine Offshore',
+      effectiveDate: new Date().toISOString().slice(0, 10),
+      notes: 'Official Marine Fuel Supply Benchmark',
+      updatedBy: 'Admin',
+      updatedAt: new Date().toISOString(),
+    };
+    const nextFuelPrice: FuelPriceRecord = {
+      ...currentPrice,
+      ...updates,
+      pricePerLiter: Math.max(
+        0,
+        Number(updates.pricePerLiter ?? currentPrice.pricePerLiter) || 0
+      ),
+      currency: updates.currency || currentPrice.currency || 'IDR',
+      fuelType:
+        updates.fuelType || currentPrice.fuelType || 'Biofuel B50 Marine Offshore',
+      effectiveDate: updates.effectiveDate || currentPrice.effectiveDate,
+      notes: updates.notes !== undefined ? updates.notes : currentPrice.notes,
+      updatedBy: user.displayName || user.username || 'Admin',
+      updatedAt: new Date().toISOString(),
+    };
+    const nextState: AppOperationalState = {
+      ...get().state,
+      fuelPrice: nextFuelPrice,
+    };
+    get().persistState(nextState);
+    get().showToast('Fuel benchmark price updated successfully.', 'success');
   },
 
   restoreFullState: (rawState) => {

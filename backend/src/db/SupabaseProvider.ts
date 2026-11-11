@@ -279,6 +279,27 @@ async function syncRelationalTablesRest(
           shore_volume: Math.max(0, Number(ft.shoreVolume) || 0),
         })),
       },
+      {
+        table: 'fuel_prices',
+        rows: state.fuelPrice
+          ? [
+              {
+                id: 'current',
+                price_per_liter: Number(state.fuelPrice.pricePerLiter) || 18500,
+                currency: state.fuelPrice.currency || 'IDR',
+                fuel_type: state.fuelPrice.fuelType || 'Biofuel B50 Marine Offshore',
+                effective_date:
+                  state.fuelPrice.effectiveDate ||
+                  new Date().toISOString().slice(0, 10),
+                notes:
+                  state.fuelPrice.notes ||
+                  'Official Marine Fuel Supply Benchmark',
+                updated_by: state.fuelPrice.updatedBy || 'Admin',
+                updated_at: state.fuelPrice.updatedAt || new Date().toISOString(),
+              },
+            ]
+          : [],
+      },
     ];
 
     for (const spec of specs) {

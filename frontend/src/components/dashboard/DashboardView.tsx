@@ -9,6 +9,7 @@ import {
   ContractorDistributionCard,
   DispatchTrendlineCard,
 } from './DashboardCharts';
+import { FuelPriceCard } from './FuelPriceCard';
 
 export function DashboardView() {
   const {
@@ -198,12 +199,13 @@ export function DashboardView() {
         </div>
       </div>
 
-      {/* Ship Visualizer (7 cols) & Contractor Distribution (5 cols) */}
+      {/* Ship Visualizer (7 cols) & Contractor Distribution + Fuel Price (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-7 flex">
           <HullVisualizer />
         </div>
-        <div className="lg:col-span-5 flex">
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <FuelPriceCard />
           <ContractorDistributionCard />
         </div>
       </div>

@@ -21,6 +21,15 @@ export class StateController {
       const prev = await DatabaseAdapter.getState();
       const next = sanitizeOperationalState(nextState);
 
+      const fuelPriceChanged =
+        JSON.stringify(prev.fuelPrice) !== JSON.stringify(next.fuelPrice);
+
+      if (fuelPriceChanged) {
+        throw new Error(
+          'Forbidden: Only Administrator can update the fuel benchmark price.'
+        );
+      }
+
       const opsChanged =
         JSON.stringify(prev.bunkerings) !== JSON.stringify(next.bunkerings) ||
         JSON.stringify(prev.soundings) !== JSON.stringify(next.soundings) ||

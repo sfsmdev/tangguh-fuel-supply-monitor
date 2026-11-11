@@ -1,6 +1,17 @@
-import { AppOperationalState } from '../models/Inventory';
+import { AppOperationalState, FuelPriceRecord } from '../models/Inventory';
 import { ClientRecord, resolveClientColorStyle } from '../models/Client';
 import { DEFAULT_STORAGE_CONFIG } from '../models/StorageConfig';
+
+export const DEFAULT_FUEL_PRICE: FuelPriceRecord = {
+  id: 'current',
+  pricePerLiter: 18500,
+  currency: 'IDR',
+  fuelType: 'Biofuel B50 Marine Offshore',
+  effectiveDate: '2026-11-01',
+  notes: 'Official Marine Fuel Supply Benchmark',
+  updatedBy: 'Admin',
+  updatedAt: new Date().toISOString(),
+};
 
 /**
  * Clean Initial Operational State
@@ -16,6 +27,7 @@ export function createCleanInitialState(): AppOperationalState {
     forecastDispatches: [],
     forecastTopups: [],
     shoreTankDailyRobs: {},
+    fuelPrice: { ...DEFAULT_FUEL_PRICE },
   };
 }
 
@@ -64,6 +76,21 @@ export function sanitizeOperationalState(
       ? raw.shoreTankDailyRobs
       : {};
 
+  const fuelPrice: FuelPriceRecord = {
+    ...DEFAULT_FUEL_PRICE,
+    ...(raw.fuelPrice && typeof raw.fuelPrice === 'object' ? raw.fuelPrice : {}),
+    pricePerLiter: Math.max(
+      0,
+      Number(raw.fuelPrice?.pricePerLiter ?? DEFAULT_FUEL_PRICE.pricePerLiter) || 0
+    ),
+    currency: String(raw.fuelPrice?.currency || DEFAULT_FUEL_PRICE.currency).trim(),
+    fuelType: String(raw.fuelPrice?.fuelType || DEFAULT_FUEL_PRICE.fuelType).trim(),
+    effectiveDate: String(raw.fuelPrice?.effectiveDate || DEFAULT_FUEL_PRICE.effectiveDate).trim(),
+    notes: String(raw.fuelPrice?.notes ?? DEFAULT_FUEL_PRICE.notes ?? '').trim(),
+    updatedBy: String(raw.fuelPrice?.updatedBy || DEFAULT_FUEL_PRICE.updatedBy).trim(),
+    updatedAt: String(raw.fuelPrice?.updatedAt || DEFAULT_FUEL_PRICE.updatedAt).trim(),
+  };
+
   // Ensure any contractor/client referenced in bunkerings or forecastDispatches is registered in clients
   const referencedNames = new Set<string>();
   bunkerings.forEach((b) => {
@@ -105,5 +132,6 @@ export function sanitizeOperationalState(
     forecastDispatches,
     forecastTopups,
     shoreTankDailyRobs,
+    fuelPrice,
   };
 }
