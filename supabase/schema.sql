@@ -528,7 +528,7 @@ CREATE POLICY "Allow operational state read/write"
   WITH CHECK (true);
 
 -- =============================================================================
--- 12. FUEL BENCHMARK PRICES TABLE: public.fuel_prices (Harga Acuan Minyak)
+-- 12. FUEL BENCHMARK PRICES TABLE: public.fuel_prices (Pertamina Purchase Rate)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.fuel_prices (
   id TEXT PRIMARY KEY DEFAULT 'current',

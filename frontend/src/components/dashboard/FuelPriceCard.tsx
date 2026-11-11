@@ -87,7 +87,7 @@ export function FuelPriceCard() {
                 }`}
               />
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                Harga Acuan Minyak
+                Pertamina Purchase Rate
               </h3>
             </div>
 
@@ -96,7 +96,7 @@ export function FuelPriceCard() {
                 type="button"
                 onClick={openModal}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-xs font-bold transition shadow-2xs z-10 cursor-pointer"
-                title="Update Harga Minyak Terbaru (Admin Only)"
+                title="Update Pertamina Purchase Rate (Admin Only)"
               >
                 <i className="fa-solid fa-pen-to-square text-[11px]" />
                 <span>Update Harga</span>
@@ -142,7 +142,7 @@ export function FuelPriceCard() {
             </p>
           ) : !hasPrice ? (
             <p className="text-[11px] text-slate-400 italic mt-1">
-              Belum ada data input harga
+              Belum ada data Pertamina Purchase Rate
             </p>
           ) : null}
         </div>
@@ -181,7 +181,7 @@ export function FuelPriceCard() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                    Update Harga Acuan Minyak
+                    Update Pertamina Purchase Rate
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     Khusus Administrator • Tersimpan langsung ke database
@@ -264,7 +264,7 @@ export function FuelPriceCard() {
                   rows={2}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="Contoh: Official Pertamina Marine Fuel Benchmark"
+                  placeholder="Contoh: Official Pertamina Marine Fuel Purchase Rate"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
