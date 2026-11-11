@@ -542,6 +542,17 @@ CREATE TABLE IF NOT EXISTS public.fuel_prices (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Migrate column to TEXT if table was previously created with DATE type
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'fuel_prices' AND column_name = 'effective_date' AND data_type != 'text'
+  ) THEN
+    ALTER TABLE public.fuel_prices ALTER COLUMN effective_date TYPE TEXT USING effective_date::TEXT;
+  END IF;
+END $$;
+
 ALTER TABLE public.fuel_prices ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow public read fuel_prices" ON public.fuel_prices;
@@ -574,7 +585,7 @@ VALUES (
   0,
   'IDR',
   'Biofuel B50',
-  '',
+  NULL,
   '',
   '',
   NOW()
@@ -592,6 +603,16 @@ CREATE TABLE IF NOT EXISTS public.fuel_price_history (
   updated_by TEXT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'fuel_price_history' AND column_name = 'effective_date' AND data_type != 'text'
+  ) THEN
+    ALTER TABLE public.fuel_price_history ALTER COLUMN effective_date TYPE TEXT USING effective_date::TEXT;
+  END IF;
+END $$;
 
 ALTER TABLE public.fuel_price_history ENABLE ROW LEVEL SECURITY;
 
@@ -1101,7 +1122,7 @@ BEGIN
       COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 0),
       COALESCE(p_state->'fuelPrice'->>'currency', 'IDR'),
       COALESCE(p_state->'fuelPrice'->>'fuelType', 'Biofuel B50'),
-      COALESCE(p_state->'fuelPrice'->>'effectiveDate', ''),
+      NULLIF(TRIM(p_state->'fuelPrice'->>'effectiveDate'), ''),
       COALESCE(p_state->'fuelPrice'->>'notes', ''),
       COALESCE(p_state->'fuelPrice'->>'updatedBy', ''),
       NOW()
@@ -1130,7 +1151,7 @@ BEGIN
         COALESCE((p_state->'fuelPrice'->>'pricePerLiter')::NUMERIC, 0),
         COALESCE(p_state->'fuelPrice'->>'currency', 'IDR'),
         COALESCE(p_state->'fuelPrice'->>'fuelType', 'Biofuel B50'),
-        COALESCE(p_state->'fuelPrice'->>'effectiveDate', ''),
+        NULLIF(TRIM(p_state->'fuelPrice'->>'effectiveDate'), ''),
         COALESCE(p_state->'fuelPrice'->>'notes', ''),
         COALESCE(p_state->'fuelPrice'->>'updatedBy', 'Admin'),
         NOW()
