@@ -286,8 +286,8 @@ export function FuelPriceCard() {
                   {activeRecord.period}
                 </span>
                 <span className="text-slate-400">•</span>
-                <span className="font-mono text-slate-500 text-[11px]">
-                  {activeRecord.startDate} s/d {activeRecord.endDate}
+                <span className="font-semibold text-slate-600 text-xs">
+                  {MONTH_NAMES[activeRecord.month - 1]} {activeRecord.year}
                 </span>
               </div>
               <span className="text-[11px] font-semibold text-slate-500">
@@ -462,10 +462,10 @@ export function FuelPriceCard() {
                   </div>
                 </div>
 
-                <div className="text-[11px] text-amber-800 font-mono bg-white/80 p-2 rounded-lg border border-amber-100 flex items-center justify-between">
-                  <span>Tanggal Berlaku:</span>
+                <div className="text-[11px] text-amber-800 font-semibold bg-white/80 p-2 rounded-lg border border-amber-100 flex items-center justify-between">
+                  <span>Periode Berlaku:</span>
                   <span className="font-bold">
-                    {modalRange.startDate} s/d {modalRange.endDate}
+                    {modalPeriod} • {MONTH_NAMES[modalMonth - 1]} {modalYear}
                   </span>
                 </div>
               </div>
